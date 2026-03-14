@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { systems, machineInfo } from "@/data/systems";
+import { machineInfo } from "@/data/systems";
+import { useSystems } from "@/context/SystemsContext";
 import { RiskBadge } from "@/components/RiskBadge";
 import { AlertTriangle, Shield, Disc3, TriangleAlert, Navigation, Flame, Zap, ArrowRight } from "lucide-react";
 
