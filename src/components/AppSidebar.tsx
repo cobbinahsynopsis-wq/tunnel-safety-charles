@@ -75,7 +75,7 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup defaultOpen>
+        <SidebarGroup>
           <SidebarGroupLabel className="text-[10px] uppercase tracking-widest">
             Systems
           </SidebarGroupLabel>
