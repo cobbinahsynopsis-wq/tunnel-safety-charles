@@ -338,11 +338,6 @@ export const systems: SystemData[] = [
       { id: "fr3", hazard: "Hydraulic oil fire", severity: 5, probability: 2, riskLevel: "high" },
       { id: "fr4", hazard: "Explosion from fuel vapor", severity: 5, probability: 1, riskLevel: "medium" },
     ],
-    risks: [
-      { id: "fr1", hazard: "Tunnel fire with trapped personnel", severity: 5, probability: 2, riskLevel: "high" },
-      { id: "fr2", hazard: "Battery thermal runaway", severity: 5, probability: 1, riskLevel: "medium" },
-      { id: "fr3", hazard: "Hydraulic oil fire", severity: 5, probability: 2, riskLevel: "high" },
-    ],
     safetyFunctions: [
       { id: "fs1", function: "Automatic fire suppression", plr: "d", category: "3", description: "Automatic discharge of extinguishing agent on fire detection" },
       { id: "fs2", function: "Manual fire trigger", plr: "c", category: "1", description: "Manual activation of fire suppression from operator cabin" },
