@@ -9,6 +9,7 @@ const iconMap: Record<string, React.ElementType> = {
 };
 
 export default function Index() {
+  const { systems } = useSystems();
   const totalRisks = systems.reduce((acc, s) => acc + s.risks.length, 0);
   const criticalRisks = systems.reduce((acc, s) => acc + s.risks.filter(r => r.riskLevel === "critical").length, 0);
   const highRisks = systems.reduce((acc, s) => acc + s.risks.filter(r => r.riskLevel === "high").length, 0);
