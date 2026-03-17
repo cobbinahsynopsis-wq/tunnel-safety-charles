@@ -7,6 +7,7 @@ import { SystemsProvider } from "@/context/SystemsContext";
 import { Layout } from "./components/Layout";
 import Index from "./pages/Index";
 import SystemAnalysis from "./pages/SystemAnalysis";
+import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -21,6 +22,7 @@ const App = () => (
           <Routes>
             <Route element={<Layout />}>
               <Route path="/" element={<Index />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/system/:systemId" element={<SystemAnalysis />} />
             </Route>
             <Route path="*" element={<NotFound />} />

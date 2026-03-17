@@ -80,7 +80,10 @@ function TreeNode({ node, depth = 0, onUpdate, onAddChild, onDelete }: TreeNodeP
                 className="bg-background border border-ring rounded-sm px-1 py-0.5 text-xs outline-none min-w-[120px]"
               />
             ) : (
-              <span className="text-left leading-tight">{node.label}</span>
+              <span className="text-left leading-tight">
+                {node.code && <span className="font-mono text-primary/70 mr-1">[{node.code}]</span>}
+                {node.label}
+              </span>
             )}
             {node.type === "basic" && (
               <span className="ml-1 w-2 h-2 rounded-full bg-risk-medium shrink-0" />
