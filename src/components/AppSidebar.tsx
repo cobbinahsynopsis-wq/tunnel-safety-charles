@@ -67,7 +67,19 @@ export function AppSidebar() {
                     activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
                   >
                     <LayoutDashboard className="mr-2 h-4 w-4" />
-                    {!collapsed && <span>Dashboard</span>}
+                    {!collapsed && <span>Overview</span>}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink
+                    to="/dashboard"
+                    className="hover:bg-sidebar-accent/50"
+                    activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+                  >
+                    <BarChart3 className="mr-2 h-4 w-4" />
+                    {!collapsed && <span>Power BI Dashboard</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
