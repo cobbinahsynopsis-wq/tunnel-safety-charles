@@ -1,4 +1,4 @@
-import { Disc3, TriangleAlert, Navigation, Flame, Zap, LayoutDashboard } from "lucide-react";
+import { Disc3, TriangleAlert, Navigation, Flame, Zap, LayoutDashboard, BarChart3 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
