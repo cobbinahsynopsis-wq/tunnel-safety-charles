@@ -168,7 +168,7 @@ export function PowerBIDashboard() {
             <BarChart data={rpnBySystem} barGap={4}>
               <XAxis dataKey="name" tick={{ fontSize: 10 }} />
               <YAxis tick={{ fontSize: 10 }} />
-              <Tooltip contentStyle={{ fontSize: 11, borderRadius: 2 }} />
+      <Tooltip contentStyle={{ fontSize: 11, borderRadius: 4, background: "hsl(220, 25%, 11%)", border: "1px solid hsl(220, 20%, 18%)", color: "hsl(210, 20%, 90%)" }} />
               <Bar dataKey="maxRpn" name="Max RPN" radius={[2, 2, 0, 0]}>
                 {rpnBySystem.map((entry, i) => (
                   <Cell key={i} fill={entry.color} />
