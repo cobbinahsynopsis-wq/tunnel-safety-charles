@@ -362,7 +362,7 @@ export function PowerBIDashboard() {
 }
 
 function KPICard({ label, value, icon, variant = "default" }: { label: string; value: number | string; icon?: React.ReactNode; variant?: "default" | "critical" | "high" }) {
-  const bg = variant === "critical" ? "bg-risk-critical/10 border-risk-critical/30" : variant === "high" ? "bg-risk-high/10 border-risk-high/30" : "border-border bg-card";
+  const bg = variant === "critical" ? "bg-risk-critical/10 border-risk-critical/30" : variant === "high" ? "bg-risk-high/10 border-risk-high/30" : "border-border/50 bg-card/60";
   const textColor = variant === "critical" ? "text-risk-critical" : variant === "high" ? "text-risk-high" : "text-foreground";
 
   return (
