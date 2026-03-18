@@ -119,8 +119,8 @@ export function PowerBIDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-primary" />
+          <h1 className="text-lg font-semibold flex items-center gap-2 text-primary">
+            <BarChart3 className="h-5 w-5" />
             Power BI Dashboard
           </h1>
           <p className="text-xs text-muted-foreground">Interactive Risk Analysis — ISO 12100 / ISO 13849</p>
@@ -128,7 +128,7 @@ export function PowerBIDashboard() {
         <div className="flex items-center gap-2">
           <button
             onClick={downloadExcel}
-            className="flex items-center gap-1.5 text-xs border border-border rounded-sm px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary/20 transition-colors font-medium"
+            className="flex items-center gap-1.5 text-xs border border-primary/30 rounded px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary/20 transition-colors font-medium"
           >
             <Download className="h-3.5 w-3.5" />
             Export Excel
@@ -137,7 +137,7 @@ export function PowerBIDashboard() {
           <select
             value={selectedSystem}
             onChange={e => setSelectedSystem(e.target.value)}
-            className="text-xs border border-border rounded-sm px-2 py-1.5 bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            className="text-xs border border-border/50 rounded px-2 py-1.5 bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
           >
             <option value="all">All Systems</option>
             {systems.map(s => (
