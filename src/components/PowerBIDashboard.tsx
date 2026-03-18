@@ -261,7 +261,7 @@ export function PowerBIDashboard() {
           <h3 className="text-xs font-semibold uppercase tracking-wider mb-3">System Complexity Radar</h3>
           <ResponsiveContainer width="100%" height={240}>
             <RadarChart data={radarData}>
-              <PolarGrid stroke="hsl(214, 32%, 91%)" />
+              <PolarGrid stroke="hsl(220, 20%, 18%)" />
               <PolarAngleAxis dataKey="system" tick={{ fontSize: 9 }} />
               <PolarRadiusAxis tick={{ fontSize: 8 }} />
               <Radar name="FMEA Items" dataKey="FMEA Items" stroke={COLORS.primary} fill={COLORS.primary} fillOpacity={0.2} />
