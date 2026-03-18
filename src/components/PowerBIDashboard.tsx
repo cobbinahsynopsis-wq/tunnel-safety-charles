@@ -31,12 +31,12 @@ function rpnLevel(rpn: number): RiskLevel {
 }
 
 const COLORS = {
-  critical: "hsl(347, 77%, 40%)",
-  high: "hsl(24, 95%, 53%)",
+  critical: "hsl(0, 72%, 51%)",
+  high: "hsl(30, 100%, 50%)",
   medium: "hsl(45, 93%, 47%)",
   low: "hsl(160, 84%, 39%)",
-  primary: "hsl(217, 91%, 60%)",
-  secondary: "hsl(215, 16%, 47%)",
+  primary: "hsl(30, 100%, 50%)",
+  secondary: "hsl(210, 15%, 35%)",
   accent1: "hsl(262, 83%, 58%)",
   accent2: "hsl(190, 90%, 45%)",
   accent3: "hsl(330, 70%, 50%)",
