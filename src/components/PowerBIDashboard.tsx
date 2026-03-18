@@ -31,12 +31,12 @@ function rpnLevel(rpn: number): RiskLevel {
 }
 
 const COLORS = {
-  critical: "hsl(347, 77%, 40%)",
-  high: "hsl(24, 95%, 53%)",
+  critical: "hsl(0, 72%, 51%)",
+  high: "hsl(30, 100%, 50%)",
   medium: "hsl(45, 93%, 47%)",
   low: "hsl(160, 84%, 39%)",
-  primary: "hsl(217, 91%, 60%)",
-  secondary: "hsl(215, 16%, 47%)",
+  primary: "hsl(30, 100%, 50%)",
+  secondary: "hsl(210, 15%, 35%)",
   accent1: "hsl(262, 83%, 58%)",
   accent2: "hsl(190, 90%, 45%)",
   accent3: "hsl(330, 70%, 50%)",
@@ -119,8 +119,8 @@ export function PowerBIDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-primary" />
+          <h1 className="text-lg font-semibold flex items-center gap-2 text-primary">
+            <BarChart3 className="h-5 w-5" />
             Power BI Dashboard
           </h1>
           <p className="text-xs text-muted-foreground">Interactive Risk Analysis — ISO 12100 / ISO 13849</p>
@@ -128,7 +128,7 @@ export function PowerBIDashboard() {
         <div className="flex items-center gap-2">
           <button
             onClick={downloadExcel}
-            className="flex items-center gap-1.5 text-xs border border-border rounded-sm px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary/20 transition-colors font-medium"
+            className="flex items-center gap-1.5 text-xs border border-primary/30 rounded px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary/20 transition-colors font-medium"
           >
             <Download className="h-3.5 w-3.5" />
             Export Excel
@@ -137,7 +137,7 @@ export function PowerBIDashboard() {
           <select
             value={selectedSystem}
             onChange={e => setSelectedSystem(e.target.value)}
-            className="text-xs border border-border rounded-sm px-2 py-1.5 bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            className="text-xs border border-border/50 rounded px-2 py-1.5 bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
           >
             <option value="all">All Systems</option>
             {systems.map(s => (
@@ -168,7 +168,7 @@ export function PowerBIDashboard() {
             <BarChart data={rpnBySystem} barGap={4}>
               <XAxis dataKey="name" tick={{ fontSize: 10 }} />
               <YAxis tick={{ fontSize: 10 }} />
-              <Tooltip contentStyle={{ fontSize: 11, borderRadius: 2 }} />
+      <Tooltip contentStyle={{ fontSize: 11, borderRadius: 4, background: "hsl(220, 25%, 11%)", border: "1px solid hsl(220, 20%, 18%)", color: "hsl(210, 20%, 90%)" }} />
               <Bar dataKey="maxRpn" name="Max RPN" radius={[2, 2, 0, 0]}>
                 {rpnBySystem.map((entry, i) => (
                   <Cell key={i} fill={entry.color} />
@@ -261,7 +261,7 @@ export function PowerBIDashboard() {
           <h3 className="text-xs font-semibold uppercase tracking-wider mb-3">System Complexity Radar</h3>
           <ResponsiveContainer width="100%" height={240}>
             <RadarChart data={radarData}>
-              <PolarGrid stroke="hsl(214, 32%, 91%)" />
+              <PolarGrid stroke="hsl(220, 20%, 18%)" />
               <PolarAngleAxis dataKey="system" tick={{ fontSize: 9 }} />
               <PolarRadiusAxis tick={{ fontSize: 8 }} />
               <Radar name="FMEA Items" dataKey="FMEA Items" stroke={COLORS.primary} fill={COLORS.primary} fillOpacity={0.2} />
@@ -362,7 +362,7 @@ export function PowerBIDashboard() {
 }
 
 function KPICard({ label, value, icon, variant = "default" }: { label: string; value: number | string; icon?: React.ReactNode; variant?: "default" | "critical" | "high" }) {
-  const bg = variant === "critical" ? "bg-risk-critical/10 border-risk-critical/30" : variant === "high" ? "bg-risk-high/10 border-risk-high/30" : "border-border bg-card";
+  const bg = variant === "critical" ? "bg-risk-critical/10 border-risk-critical/30" : variant === "high" ? "bg-risk-high/10 border-risk-high/30" : "border-border/50 bg-card/60";
   const textColor = variant === "critical" ? "text-risk-critical" : variant === "high" ? "text-risk-high" : "text-foreground";
 
   return (

@@ -18,17 +18,28 @@ export default function Index() {
 
   return (
     <div className="space-y-6">
-      {/* Title */}
-      <div>
-        <h1 className="text-xl font-semibold">Machine Risk Analysis Dashboard</h1>
-        <p className="text-xs text-muted-foreground mt-1">
-          {machineInfo.name} — ISO 12100 Risk Assessment & ISO 13849 Performance Level Evaluation
+      {/* Hero */}
+      <div className="relative overflow-hidden rounded border border-primary/20 bg-card/80 backdrop-blur-sm p-6">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
+        <h1 className="text-2xl font-bold text-primary">TSP/MSV Safety Analysis</h1>
+        <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
+          Interactive Failure Mode & Effects Analysis (FMEA) and Fault Tree Analysis (FTA) for a Tunnel
+          Moving System. Edit RPN values, add new failure modes, and export your data.
         </p>
       </div>
 
+      {/* KPI Row */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <KPIBox label="TOTAL FAILURE MODES" value={totalFMEA} sub={`across ${systems.length} subsystems`} />
+        <KPIBox label="CRITICAL RISK (RPN≥200)" value={criticalRisks} sub="require immediate action" variant="critical" />
+        <KPIBox label="HIGH RISK (RPN 120-199)" value={highRisks} sub="require priority action" variant="high" />
+        <KPIBox label="MAXIMUM RPN" value={Math.max(...systems.flatMap(s => s.fmea.map(f => f.rpn)), 0)} sub="highest severity" />
+        <KPIBox label="SAFETY FUNCTIONS" value={totalSafety} sub="ISO 13849 evaluated" />
+      </div>
+
       {/* Machine Specs */}
-      <div className="border rounded-sm bg-card p-4">
-        <h2 className="text-xs font-semibold uppercase tracking-wider mb-3">Machine Specifications</h2>
+      <div className="border border-border/50 rounded bg-card/60 backdrop-blur-sm p-4">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-primary mb-3">Machine Specifications</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-2 text-xs">
           {Object.entries({
             "Load Capacity": machineInfo.loadCapacity,
@@ -40,41 +51,17 @@ export default function Index() {
             "Steering": machineInfo.steering,
             "Guidance": machineInfo.guidance,
           }).map(([key, value]) => (
-            <div key={key} className="flex justify-between border-b border-border/50 pb-1">
+            <div key={key} className="flex justify-between border-b border-border/30 pb-1">
               <span className="text-muted-foreground">{key}</span>
-              <span className="font-mono font-medium">{value}</span>
+              <span className="font-mono font-medium text-foreground">{value}</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Summary Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <div className="border rounded-sm p-3 bg-card">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Systems</p>
-          <p className="text-2xl font-mono font-bold mt-1">{systems.length}</p>
-        </div>
-        <div className="border rounded-sm p-3 bg-card">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Total Risks</p>
-          <p className="text-2xl font-mono font-bold mt-1">{totalRisks}</p>
-        </div>
-        <div className="border rounded-sm p-3 bg-risk-critical/5 border-risk-critical/20">
-          <p className="text-[10px] uppercase tracking-wider text-risk-critical">Critical</p>
-          <p className="text-2xl font-mono font-bold mt-1 text-risk-critical">{criticalRisks}</p>
-        </div>
-        <div className="border rounded-sm p-3 bg-card">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">FMEA Items</p>
-          <p className="text-2xl font-mono font-bold mt-1">{totalFMEA}</p>
-        </div>
-        <div className="border rounded-sm p-3 bg-card">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Safety Functions</p>
-          <p className="text-2xl font-mono font-bold mt-1">{totalSafety}</p>
-        </div>
-      </div>
-
       {/* System Cards */}
       <div>
-        <h2 className="text-xs font-semibold uppercase tracking-wider mb-3">Critical Systems Analysis</h2>
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-primary mb-3">Critical Systems Analysis</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {systems.map((system) => {
             const Icon = iconMap[system.icon];
@@ -86,12 +73,12 @@ export default function Index() {
               <Link
                 key={system.id}
                 to={`/system/${system.id}`}
-                className="border rounded-sm bg-card p-4 hover:border-primary/30 hover:shadow-sm transition-all group"
+                className="border border-border/50 rounded bg-card/60 backdrop-blur-sm p-4 hover:border-primary/40 hover:bg-card/80 transition-all group"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-sm bg-primary/10 flex items-center justify-center">
-                      <Icon className="h-3.5 w-3.5 text-primary" />
+                    <div className="w-8 h-8 rounded bg-primary/10 border border-primary/20 flex items-center justify-center">
+                      <Icon className="h-4 w-4 text-primary" />
                     </div>
                     <div>
                       <h3 className="text-sm font-semibold">{system.name}</h3>
@@ -103,7 +90,7 @@ export default function Index() {
 
                 <p className="text-[10px] text-muted-foreground mt-2 line-clamp-2">{system.description}</p>
 
-                <div className="mt-3 pt-2 border-t border-border/50 flex items-center justify-between text-[10px]">
+                <div className="mt-3 pt-2 border-t border-border/30 flex items-center justify-between text-[10px]">
                   <div className="flex items-center gap-2">
                     {sysCritical > 0 && <RiskBadge level="critical" />}
                     {sysHigh > 0 && <RiskBadge level="high" />}
@@ -120,18 +107,39 @@ export default function Index() {
         </div>
       </div>
 
+      {/* Risk Legend */}
+      <div className="flex items-center gap-4 text-[10px] font-mono">
+        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-risk-critical" /> CRITICAL (RPN≥200)</span>
+        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-risk-high" /> HIGH (120-199)</span>
+        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-risk-medium" /> MEDIUM (80-119)</span>
+        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-risk-low" /> LOW (&lt;80)</span>
+      </div>
+
       {/* Standards */}
-      <div className="border rounded-sm bg-card p-4">
-        <h2 className="text-xs font-semibold uppercase tracking-wider mb-2">Applicable Standards</h2>
-        <div className="flex gap-3">
+      <div className="border border-border/50 rounded bg-card/60 backdrop-blur-sm p-4">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-primary mb-2">Applicable Standards</h2>
+        <div className="flex gap-3 flex-wrap">
           {machineInfo.standards.map((std) => (
-            <div key={std} className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-sm">
+            <div key={std} className="flex items-center gap-2 px-3 py-1.5 bg-muted/50 border border-border/50 rounded-sm">
               <Shield className="h-3.5 w-3.5 text-primary" />
               <span className="text-xs font-mono font-medium">{std}</span>
             </div>
           ))}
         </div>
       </div>
+    </div>
+  );
+}
+
+function KPIBox({ label, value, sub, variant }: { label: string; value: number; sub: string; variant?: "critical" | "high" }) {
+  const borderClass = variant === "critical" ? "border-risk-critical/30" : variant === "high" ? "border-risk-high/30" : "border-border/50";
+  const valueClass = variant === "critical" ? "text-risk-critical" : variant === "high" ? "text-risk-high" : "text-foreground";
+
+  return (
+    <div className={`border ${borderClass} rounded bg-card/60 backdrop-blur-sm p-3`}>
+      <p className="text-[9px] uppercase tracking-wider text-muted-foreground font-mono">{label}</p>
+      <p className={`text-3xl font-mono font-bold mt-1 ${valueClass}`}>{value}</p>
+      <p className="text-[9px] text-muted-foreground mt-0.5">{sub}</p>
     </div>
   );
 }
