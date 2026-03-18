@@ -7,7 +7,8 @@ import {
   Treemap,
 } from "recharts";
 import { RiskBadge } from "./RiskBadge";
-import { AlertTriangle, Shield, Activity, TrendingUp, Filter, BarChart3, Zap } from "lucide-react";
+import { AlertTriangle, Shield, Activity, TrendingUp, Filter, BarChart3, Zap, Download } from "lucide-react";
+import { downloadExcel } from "@/utils/excelExport";
 
 function countNodes(node: FaultTreeNode): number {
   let count = 1;
