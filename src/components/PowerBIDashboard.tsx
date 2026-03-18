@@ -7,7 +7,8 @@ import {
   Treemap,
 } from "recharts";
 import { RiskBadge } from "./RiskBadge";
-import { AlertTriangle, Shield, Activity, TrendingUp, Filter, BarChart3, Zap } from "lucide-react";
+import { AlertTriangle, Shield, Activity, TrendingUp, Filter, BarChart3, Zap, Download } from "lucide-react";
+import { downloadExcel } from "@/utils/excelExport";
 
 function countNodes(node: FaultTreeNode): number {
   let count = 1;
@@ -125,6 +126,13 @@ export function PowerBIDashboard() {
           <p className="text-xs text-muted-foreground">Interactive Risk Analysis — ISO 12100 / ISO 13849</p>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={downloadExcel}
+            className="flex items-center gap-1.5 text-xs border border-border rounded-sm px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary/20 transition-colors font-medium"
+          >
+            <Download className="h-3.5 w-3.5" />
+            Export Excel
+          </button>
           <Filter className="h-3.5 w-3.5 text-muted-foreground" />
           <select
             value={selectedSystem}
