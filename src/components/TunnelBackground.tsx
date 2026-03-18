@@ -45,7 +45,7 @@ export function TunnelBackground() {
         {/* Moving TSP Machine */}
         <motion.g
           initial={{ x: -300 }}
-          animate={{ x: [−300, 1400] }}
+          animate={{ x: [-300, 1400] }}
           transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
         >
           {/* Machine body */}
