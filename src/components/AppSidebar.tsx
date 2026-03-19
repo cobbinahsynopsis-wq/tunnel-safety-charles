@@ -1,6 +1,8 @@
 import { Disc3, TriangleAlert, Navigation, Flame, Zap, LayoutDashboard, BarChart3, Shield } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
+import { useSystems } from "@/context/SystemsContext";
+import { AddSystemDialog } from "@/components/AddSystemDialog";
 import {
   Sidebar,
   SidebarContent,
@@ -15,24 +17,11 @@ import {
 } from "@/components/ui/sidebar";
 
 const iconMap: Record<string, React.ElementType> = {
-  Disc3,
-  TriangleAlert,
-  Navigation,
-  Flame,
-  Zap,
+  Disc3, TriangleAlert, Navigation, Flame, Zap,
 };
-
-const systemItems = [
-  { title: "Braking", subtitle: "Freinage", url: "/system/braking", icon: "Disc3" },
-  { title: "Tilt Monitoring", subtitle: "Dévers", url: "/system/tilt", icon: "TriangleAlert" },
-  { title: "Steering", subtitle: "Direction", url: "/system/steering", icon: "Navigation" },
-  { title: "Fire System", subtitle: "Incendie", url: "/system/fire", icon: "Flame" },
-  { title: "Propulsion", subtitle: "Translation", url: "/system/propulsion", icon: "Zap" },
-];
 
 const navItems = [
   { title: "Overview", url: "/", icon: LayoutDashboard, end: true },
-  { title: "FMEA Analysis", url: "/system/braking", icon: Shield },
   { title: "Power BI Dashboard", url: "/dashboard", icon: BarChart3 },
 ];
 
@@ -40,6 +29,7 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
+  const { systems } = useSystems();
 
   return (
     <Sidebar collapsible="icon">
@@ -93,23 +83,22 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {systemItems.map((item) => {
-                const Icon = iconMap[item.icon];
-                const isActive = location.pathname === item.url;
+              {systems.map((system) => {
+                const Icon = iconMap[system.icon] ?? Zap;
                 return (
-                  <SidebarMenuItem key={item.url}>
+                  <SidebarMenuItem key={system.id}>
                     <SidebarMenuButton asChild>
                       <NavLink
-                        to={item.url}
+                        to={`/system/${system.id}`}
                         className="hover:bg-sidebar-accent/50 transition-colors"
                         activeClassName="bg-primary/10 text-primary border-l-2 border-primary font-medium"
                       >
                         <Icon className="mr-2 h-4 w-4 shrink-0" />
                         {!collapsed && (
                           <div className="flex flex-col">
-                            <span className="text-sm leading-tight">{item.title}</span>
+                            <span className="text-sm leading-tight">{system.name}</span>
                             <span className="text-[9px] text-sidebar-foreground/40 font-mono">
-                              {item.subtitle}
+                              {system.nameFr}
                             </span>
                           </div>
                         )}
@@ -118,6 +107,13 @@ export function AppSidebar() {
                   </SidebarMenuItem>
                 );
               })}
+              {!collapsed && (
+                <SidebarMenuItem>
+                  <div className="px-2 py-1">
+                    <AddSystemDialog />
+                  </div>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

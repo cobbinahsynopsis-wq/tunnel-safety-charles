@@ -2,14 +2,17 @@ import { Link } from "react-router-dom";
 import { machineInfo } from "@/data/systems";
 import { useSystems } from "@/context/SystemsContext";
 import { RiskBadge } from "@/components/RiskBadge";
-import { AlertTriangle, Shield, Disc3, TriangleAlert, Navigation, Flame, Zap, ArrowRight } from "lucide-react";
+import { EngineerMetadata } from "@/components/EngineerMetadata";
+import { PerformanceLevelGraph } from "@/components/PerformanceLevelGraph";
+import { exportOverviewPDF } from "@/utils/pdfExport";
+import { Shield, Disc3, TriangleAlert, Navigation, Flame, Zap, ArrowRight, FileDown } from "lucide-react";
 
 const iconMap: Record<string, React.ElementType> = {
   Disc3, TriangleAlert, Navigation, Flame, Zap,
 };
 
 export default function Index() {
-  const { systems } = useSystems();
+  const { systems, metadata } = useSystems();
   const totalRisks = systems.reduce((acc, s) => acc + s.risks.length, 0);
   const criticalRisks = systems.reduce((acc, s) => acc + s.risks.filter(r => r.riskLevel === "critical").length, 0);
   const highRisks = systems.reduce((acc, s) => acc + s.risks.filter(r => r.riskLevel === "high").length, 0);
@@ -21,12 +24,26 @@ export default function Index() {
       {/* Hero */}
       <div className="relative overflow-hidden rounded border border-primary/20 bg-card/80 backdrop-blur-sm p-6">
         <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
-        <h1 className="text-2xl font-bold text-primary">TSP/MSV Safety Analysis</h1>
-        <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
-          Interactive Failure Mode & Effects Analysis (FMEA) and Fault Tree Analysis (FTA) for a Tunnel
-          Moving System. Edit RPN values, add new failure modes, and export your data.
-        </p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-primary">TSP/MSV Safety Analysis</h1>
+            <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
+              Interactive Failure Mode & Effects Analysis (FMEA) and Fault Tree Analysis (FTA) for a Tunnel
+              Moving System. Edit RPN values, add new failure modes, and export your data.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => exportOverviewPDF(systems, metadata)}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded text-xs font-semibold hover:bg-primary/90 transition-colors shrink-0"
+          >
+            <FileDown className="h-4 w-4" /> Export PDF Report
+          </button>
+        </div>
       </div>
+
+      {/* Engineer Metadata */}
+      <EngineerMetadata />
 
       {/* KPI Row */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
@@ -59,15 +76,18 @@ export default function Index() {
         </div>
       </div>
 
+      {/* Performance Level Graph */}
+      <PerformanceLevelGraph systems={systems} />
+
       {/* System Cards */}
       <div>
         <h2 className="text-xs font-semibold uppercase tracking-wider text-primary mb-3">Critical Systems Analysis</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {systems.map((system) => {
-            const Icon = iconMap[system.icon];
+            const Icon = iconMap[system.icon] ?? Zap;
             const sysCritical = system.risks.filter(r => r.riskLevel === "critical").length;
             const sysHigh = system.risks.filter(r => r.riskLevel === "high").length;
-            const maxRpn = Math.max(...system.fmea.map(f => f.rpn));
+            const maxRpn = system.fmea.length > 0 ? Math.max(...system.fmea.map(f => f.rpn)) : 0;
 
             return (
               <Link

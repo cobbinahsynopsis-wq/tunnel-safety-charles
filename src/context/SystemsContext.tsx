@@ -1,9 +1,20 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { systems as initialSystems, type SystemData, type FMEARow, type RiskEntry, type SafetyFunction, type FaultTreeNode, type RiskLevel } from "@/data/systems";
+
+export interface AnalysisMetadata {
+  engineerName: string;
+  date: string;
+  lastModified: string;
+  notes: string;
+}
 
 interface SystemsContextType {
   systems: SystemData[];
+  metadata: AnalysisMetadata;
+  updateMetadata: (updates: Partial<AnalysisMetadata>) => void;
   updateSystem: (systemId: string, updates: Partial<SystemData>) => void;
+  addSystem: (system: SystemData) => void;
+  deleteSystem: (systemId: string) => void;
   // FMEA
   addFMEARow: (systemId: string, row: FMEARow) => void;
   updateFMEARow: (systemId: string, rowId: string, updates: Partial<FMEARow>) => void;
@@ -27,9 +38,35 @@ interface SystemsContextType {
   updateFaultTreeNode: (systemId: string, nodeId: string, updates: Partial<FaultTreeNode>) => void;
   addFaultTreeChild: (systemId: string, parentId: string, child: FaultTreeNode) => void;
   deleteFaultTreeNode: (systemId: string, nodeId: string) => void;
+  // Reset
+  resetToDefaults: () => void;
 }
 
 const SystemsContext = createContext<SystemsContextType | null>(null);
+
+const STORAGE_KEY = "tsp-safety-systems-data";
+const METADATA_KEY = "tsp-safety-metadata";
+
+function loadFromStorage(): SystemData[] | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw) as SystemData[];
+  } catch { /* ignore parse errors */ }
+  return null;
+}
+
+function loadMetadata(): AnalysisMetadata {
+  try {
+    const raw = localStorage.getItem(METADATA_KEY);
+    if (raw) return JSON.parse(raw) as AnalysisMetadata;
+  } catch { /* ignore */ }
+  return {
+    engineerName: "",
+    date: new Date().toISOString().split("T")[0],
+    lastModified: new Date().toISOString(),
+    notes: "",
+  };
+}
 
 function updateNodeInTree(node: FaultTreeNode, nodeId: string, updates: Partial<FaultTreeNode>): FaultTreeNode {
   if (node.id === nodeId) return { ...node, ...updates };
@@ -51,7 +88,26 @@ function deleteNodeFromTree(node: FaultTreeNode, nodeId: string): FaultTreeNode 
 }
 
 export function SystemsProvider({ children }: { children: React.ReactNode }) {
-  const [systems, setSystems] = useState<SystemData[]>(structuredClone(initialSystems));
+  const [systems, setSystems] = useState<SystemData[]>(() => loadFromStorage() ?? structuredClone(initialSystems));
+  const [metadata, setMetadata] = useState<AnalysisMetadata>(loadMetadata);
+
+  // Persist to localStorage on every change
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(systems));
+    setMetadata(prev => {
+      const updated = { ...prev, lastModified: new Date().toISOString() };
+      localStorage.setItem(METADATA_KEY, JSON.stringify(updated));
+      return updated;
+    });
+  }, [systems]);
+
+  const updateMetadata = useCallback((updates: Partial<AnalysisMetadata>) => {
+    setMetadata(prev => {
+      const updated = { ...prev, ...updates };
+      localStorage.setItem(METADATA_KEY, JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
 
   const updateSystemData = useCallback((systemId: string, updater: (s: SystemData) => SystemData) => {
     setSystems(prev => prev.map(s => s.id === systemId ? updater(s) : s));
@@ -60,6 +116,14 @@ export function SystemsProvider({ children }: { children: React.ReactNode }) {
   const updateSystem = useCallback((systemId: string, updates: Partial<SystemData>) => {
     updateSystemData(systemId, s => ({ ...s, ...updates }));
   }, [updateSystemData]);
+
+  const addSystem = useCallback((system: SystemData) => {
+    setSystems(prev => [...prev, system]);
+  }, []);
+
+  const deleteSystem = useCallback((systemId: string) => {
+    setSystems(prev => prev.filter(s => s.id !== systemId));
+  }, []);
 
   const addFMEARow = useCallback((systemId: string, row: FMEARow) => {
     updateSystemData(systemId, s => ({ ...s, fmea: [...s.fmea, row] }));
@@ -153,15 +217,28 @@ export function SystemsProvider({ children }: { children: React.ReactNode }) {
     });
   }, [updateSystemData]);
 
+  const resetToDefaults = useCallback(() => {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(METADATA_KEY);
+    setSystems(structuredClone(initialSystems));
+    setMetadata({
+      engineerName: "",
+      date: new Date().toISOString().split("T")[0],
+      lastModified: new Date().toISOString(),
+      notes: "",
+    });
+  }, []);
+
   return (
     <SystemsContext.Provider value={{
-      systems, updateSystem,
+      systems, metadata, updateMetadata, updateSystem, addSystem, deleteSystem,
       addFMEARow, updateFMEARow, deleteFMEARow,
       addRiskEntry, updateRiskEntry, deleteRiskEntry,
       addSafetyFunction, updateSafetyFunction, deleteSafetyFunction,
       addSafetyMeasure, updateSafetyMeasure, deleteSafetyMeasure,
       addConsequence, updateConsequence, deleteConsequence,
       updateFaultTreeNode, addFaultTreeChild, deleteFaultTreeNode,
+      resetToDefaults,
     }}>
       {children}
     </SystemsContext.Provider>
