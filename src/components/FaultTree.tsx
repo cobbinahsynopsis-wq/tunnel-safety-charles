@@ -85,8 +85,26 @@ function TreeNode({ node, depth = 0, onUpdate, onAddChild, onDelete }: TreeNodeP
   }, [draft, node.label, node.id, onUpdate]);
 
   const handleAddRequest = useCallback(() => {
-    setShowGateSelector(true);
-  }, []);
+    const hasExistingChildren = node.children && node.children.length > 0;
+    if (hasExistingChildren) {
+      // Node already has children — ask for gate type between siblings
+      setShowGateSelector(true);
+    } else {
+      // First child — add directly without gate selector
+      const childCode = generateChildCode(node);
+      const child: FaultTreeNode = {
+        id: `ft-${Date.now()}`,
+        label: "New event",
+        type: "basic",
+        code: childCode,
+      };
+      if (node.type === "basic" && onUpdate) {
+        onUpdate(node.id, { type: "gate" });
+      }
+      onAddChild?.(node.id, child);
+      setExpanded(true);
+    }
+  }, [node, onUpdate, onAddChild]);
 
   const handleGateSelect = useCallback(
     (gate: "AND" | "OR") => {
@@ -99,8 +117,8 @@ function TreeNode({ node, depth = 0, onUpdate, onAddChild, onDelete }: TreeNodeP
         code: childCode,
       };
 
-      // If parent doesn't have a gate yet, set it
-      if (!node.gateType && onUpdate) {
+      // Set or update the parent's gate type
+      if (onUpdate) {
         onUpdate(node.id, { gateType: gate, type: node.type === "basic" ? "gate" : node.type });
       }
 
