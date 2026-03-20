@@ -1,5 +1,5 @@
 import type { FaultTreeNode } from "@/data/systems";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { ChevronDown, ChevronRight, Plus, Trash2, Pencil } from "lucide-react";
 
 const nodeStyles: Record<string, string> = {
@@ -17,6 +17,50 @@ function GateSymbol({ type }: { type: "AND" | "OR" }) {
   );
 }
 
+function generateChildCode(parent: FaultTreeNode): string {
+  const parentCode = parent.code ?? "";
+  const childCount = parent.children?.length ?? 0;
+  const nextIndex = childCount + 1;
+
+  if (parentCode) {
+    return `${parentCode}.${nextIndex}`;
+  }
+  return String(nextIndex);
+}
+
+interface GateSelectorProps {
+  onSelect: (gate: "AND" | "OR") => void;
+  onCancel: () => void;
+}
+
+function GateSelector({ onSelect, onCancel }: GateSelectorProps) {
+  return (
+    <div className="flex items-center gap-1 ml-2 animate-in fade-in-0 zoom-in-95">
+      <button
+        type="button"
+        onClick={() => onSelect("OR")}
+        className="px-2 py-1 text-[10px] font-mono font-bold rounded-sm bg-risk-high/20 text-risk-high border border-risk-high/30 hover:bg-risk-high/30 transition-colors"
+      >
+        OR
+      </button>
+      <button
+        type="button"
+        onClick={() => onSelect("AND")}
+        className="px-2 py-1 text-[10px] font-mono font-bold rounded-sm bg-primary/20 text-primary border border-primary/30 hover:bg-primary/30 transition-colors"
+      >
+        AND
+      </button>
+      <button
+        type="button"
+        onClick={onCancel}
+        className="px-1.5 py-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+      >
+        ✕
+      </button>
+    </div>
+  );
+}
+
 interface TreeNodeProps {
   node: FaultTreeNode;
   depth?: number;
@@ -29,25 +73,48 @@ function TreeNode({ node, depth = 0, onUpdate, onAddChild, onDelete }: TreeNodeP
   const [expanded, setExpanded] = useState(depth < 2);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(node.label);
+  const [showGateSelector, setShowGateSelector] = useState(false);
   const hasChildren = node.children && node.children.length > 0;
 
-  const commitEdit = () => {
+  const commitEdit = useCallback(() => {
     setEditing(false);
-    if (draft.trim() && draft.trim() !== node.label) onUpdate?.(node.id, { label: draft.trim() });
-  };
+    const trimmed = draft.trim();
+    if (trimmed && trimmed !== node.label) {
+      onUpdate?.(node.id, { label: trimmed });
+    }
+  }, [draft, node.label, node.id, onUpdate]);
 
-  const handleAddChild = () => {
-    onAddChild?.(node.id, {
-      id: `ft-${Date.now()}`,
-      label: "New event",
-      type: "basic",
-    });
-    setExpanded(true);
-  };
+  const handleAddRequest = useCallback(() => {
+    setShowGateSelector(true);
+  }, []);
 
-  const toggleGate = () => {
-    if (node.gateType) onUpdate?.(node.id, { gateType: node.gateType === "AND" ? "OR" : "AND" });
-  };
+  const handleGateSelect = useCallback(
+    (gate: "AND" | "OR") => {
+      setShowGateSelector(false);
+      const childCode = generateChildCode(node);
+      const child: FaultTreeNode = {
+        id: `ft-${Date.now()}`,
+        label: "New event",
+        type: "basic",
+        code: childCode,
+      };
+
+      // If parent doesn't have a gate yet, set it
+      if (!node.gateType && onUpdate) {
+        onUpdate(node.id, { gateType: gate, type: node.type === "basic" ? "gate" : node.type });
+      }
+
+      onAddChild?.(node.id, child);
+      setExpanded(true);
+    },
+    [node, onUpdate, onAddChild],
+  );
+
+  const toggleGate = useCallback(() => {
+    if (node.gateType && onUpdate) {
+      onUpdate(node.id, { gateType: node.gateType === "AND" ? "OR" : "AND" });
+    }
+  }, [node.gateType, node.id, onUpdate]);
 
   return (
     <div className="relative">
@@ -55,17 +122,36 @@ function TreeNode({ node, depth = 0, onUpdate, onAddChild, onDelete }: TreeNodeP
         <div className="absolute left-0 top-0 w-4 h-3 border-l-2 border-b-2 border-border -translate-x-0" />
       )}
 
-      <div className={`ml-${depth > 0 ? 4 : 0}`}>
+      <div className={depth > 0 ? "ml-4" : ""}>
         <div className="flex items-center gap-1 group">
           <button
+            type="button"
             onClick={() => hasChildren && setExpanded(!expanded)}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs border rounded-sm transition-colors ${nodeStyles[node.type]} ${hasChildren ? "cursor-pointer hover:shadow-sm" : "cursor-default"}`}
           >
-            {hasChildren && (
-              expanded ? <ChevronDown className="h-3 w-3 shrink-0" /> : <ChevronRight className="h-3 w-3 shrink-0" />
-            )}
+            {hasChildren &&
+              (expanded ? (
+                <ChevronDown className="h-3 w-3 shrink-0" />
+              ) : (
+                <ChevronRight className="h-3 w-3 shrink-0" />
+              ))}
             {node.gateType && (
-              <span onClick={(e) => { e.stopPropagation(); toggleGate(); }} className="cursor-pointer" title="Click to toggle AND/OR">
+              <span
+                role="button"
+                tabIndex={0}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleGate();
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.stopPropagation();
+                    toggleGate();
+                  }
+                }}
+                className="cursor-pointer"
+                title="Click to toggle AND/OR"
+              >
                 <GateSymbol type={node.gateType} />
               </span>
             )}
@@ -73,15 +159,23 @@ function TreeNode({ node, depth = 0, onUpdate, onAddChild, onDelete }: TreeNodeP
               <input
                 autoFocus
                 value={draft}
-                onChange={e => setDraft(e.target.value)}
+                onChange={(e) => setDraft(e.target.value)}
                 onBlur={commitEdit}
-                onKeyDown={e => { if (e.key === "Enter") commitEdit(); if (e.key === "Escape") { setDraft(node.label); setEditing(false); } }}
-                onClick={e => e.stopPropagation()}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") commitEdit();
+                  if (e.key === "Escape") {
+                    setDraft(node.label);
+                    setEditing(false);
+                  }
+                }}
+                onClick={(e) => e.stopPropagation()}
                 className="bg-background border border-ring rounded-sm px-1 py-0.5 text-xs outline-none min-w-[120px]"
               />
             ) : (
               <span className="text-left leading-tight">
-                {node.code && <span className="font-mono text-primary/70 mr-1">[{node.code}]</span>}
+                {node.code && (
+                  <span className="font-mono text-primary/70 mr-1">[{node.code}]</span>
+                )}
                 {node.label}
               </span>
             )}
@@ -91,24 +185,56 @@ function TreeNode({ node, depth = 0, onUpdate, onAddChild, onDelete }: TreeNodeP
           </button>
 
           <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 transition-opacity">
-            <button onClick={() => { setDraft(node.label); setEditing(true); }} className="p-0.5 text-muted-foreground hover:text-foreground" title="Edit label">
+            <button
+              type="button"
+              onClick={() => {
+                setDraft(node.label);
+                setEditing(true);
+              }}
+              className="p-0.5 text-muted-foreground hover:text-foreground"
+              title="Edit label"
+            >
               <Pencil className="h-3 w-3" />
             </button>
-            <button onClick={handleAddChild} className="p-0.5 text-muted-foreground hover:text-primary" title="Add child">
+            <button
+              type="button"
+              onClick={handleAddRequest}
+              className="p-0.5 text-muted-foreground hover:text-primary"
+              title="Add child node"
+            >
               <Plus className="h-3 w-3" />
             </button>
             {node.type !== "top" && onDelete && (
-              <button onClick={() => onDelete(node.id)} className="p-0.5 text-muted-foreground hover:text-destructive" title="Delete node">
+              <button
+                type="button"
+                onClick={() => onDelete(node.id)}
+                className="p-0.5 text-muted-foreground hover:text-destructive"
+                title="Delete node"
+              >
                 <Trash2 className="h-3 w-3" />
               </button>
             )}
           </div>
+
+          {showGateSelector && (
+            <GateSelector
+              onSelect={handleGateSelect}
+              onCancel={() => setShowGateSelector(false)}
+            />
+          )}
         </div>
 
         {expanded && hasChildren && (
           <div className="ml-4 mt-1 pl-3 border-l-2 border-border space-y-1">
-            {node.children!.map((child) => (
-              <TreeNode key={child.id} node={child} depth={depth + 1} onUpdate={onUpdate} onAddChild={onAddChild} onDelete={onDelete} />
+            {node.children?.map((child) => (
+              <TreeNode
+                key={child.id}
+                node={child}
+                depth={depth + 1}
+                onUpdate={onUpdate}
+                onAddChild={onAddChild}
+                onDelete={onDelete}
+              />
             ))}
           </div>
         )}
