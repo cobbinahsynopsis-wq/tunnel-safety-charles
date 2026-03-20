@@ -254,15 +254,6 @@ function TreeNode({ node, depth = 0, onUpdate, onAddChild, onDelete }: TreeNodeP
                 onDelete={onDelete}
               />
             ))}
-            {onAddChild && (
-              <button
-                type="button"
-                onClick={handleAddRequest}
-                className="flex items-center gap-1.5 text-[11px] text-primary/70 hover:text-primary transition-colors py-1 px-2 rounded-sm hover:bg-primary/5"
-              >
-                <Plus className="h-3 w-3" /> Add failure
-              </button>
-            )}
           </div>
         )}
       </div>
