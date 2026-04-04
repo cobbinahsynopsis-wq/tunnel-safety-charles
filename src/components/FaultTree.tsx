@@ -70,7 +70,7 @@ interface TreeNodeProps {
 }
 
 function TreeNode({ node, depth = 0, onUpdate, onAddChild, onDelete }: TreeNodeProps) {
-  const [expanded, setExpanded] = useState(depth < 2);
+  const expanded = true;
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(node.label);
   const [showGateSelector, setShowGateSelector] = useState(false);
