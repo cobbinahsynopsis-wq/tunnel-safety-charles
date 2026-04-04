@@ -1,89 +1,60 @@
+/**
+ * ISO 13849-1:2023 PLr Determination Engine
+ * 
+ * PLr is determined ONLY from hazard context parameters (S, F, P)
+ * per ISO 13849-1 §4.3, Figure 3 — Risk graph.
+ * 
+ * FMEA data is used ONLY for post-determination validation (§4.6).
+ */
+
 import type { FMEARow, FaultTreeNode } from "@/data/systems";
 
-type PLrLevel = "a" | "b" | "c" | "d" | "e";
+export type PLrLevel = "a" | "b" | "c" | "d" | "e";
+export type SeverityClass = "S1" | "S2";
+export type FrequencyClass = "F1" | "F2";
+export type AvoidanceClass = "P1" | "P2";
 
-interface PLrResult {
+export interface HazardContext {
+  safetyFunction: string;
+  hazard: string;
+  severity: SeverityClass;
+  severityJustification: string;
+  frequency: FrequencyClass;
+  frequencyJustification: string;
+  avoidance: AvoidanceClass;
+  avoidanceJustification: string;
+}
+
+export interface PLrResult {
   plr: PLrLevel;
   category: string;
-  severityClass: "S1" | "S2";
-  frequency: "F1" | "F2";
-  avoidance: "P1" | "P2";
+  context: HazardContext;
   justification: string;
   isoReference: string;
+  confidence: "High" | "Medium" | "Low";
+  assumptions: string[];
+}
+
+export interface FMEAValidation {
+  isConsistent: boolean;
+  maxSeverity: number;
+  avgOccurrence: number;
+  avgDetection: number;
+  maxRpn: number;
+  findings: string[];
 }
 
 /**
- * Count total basic events (leaf nodes) in a fault tree.
+ * ISO 13849-1:2023 Figure 3 — Risk graph for PLr determination.
+ * Maps (S, F, P) → PLr strictly per the standard.
  */
-function countBasicEvents(node: FaultTreeNode): number {
-  if (!node.children || node.children.length === 0) return 1;
-  return node.children.reduce((sum, child) => sum + countBasicEvents(child), 0);
-}
-
-/**
- * Get maximum tree depth.
- */
-function getTreeDepth(node: FaultTreeNode): number {
-  if (!node.children || node.children.length === 0) return 1;
-  return 1 + Math.max(...node.children.map(getTreeDepth));
-}
-
-/**
- * Check if tree contains any OR gates (single point of failure paths).
- */
-function hasOrGates(node: FaultTreeNode): boolean {
-  if (node.gateType === "OR") return true;
-  if (!node.children) return false;
-  return node.children.some(hasOrGates);
-}
-
-/**
- * Determine severity class per ISO 13849-1 Table 3.
- * S1 = slight (reversible) injury, S2 = serious (irreversible) injury or death.
- */
-function determineSeverityClass(fmeaRows: ReadonlyArray<FMEARow>): "S1" | "S2" {
-  const maxSeverity = fmeaRows.length > 0
-    ? Math.max(...fmeaRows.map(r => r.severity))
-    : 1;
-  return maxSeverity >= 7 ? "S2" : "S1";
-}
-
-/**
- * Determine frequency/exposure class per ISO 13849-1.
- * F1 = seldom to less often, F2 = frequent to continuous.
- */
-function determineFrequency(fmeaRows: ReadonlyArray<FMEARow>): "F1" | "F2" {
-  const avgOccurrence = fmeaRows.length > 0
-    ? fmeaRows.reduce((sum, r) => sum + r.occurrence, 0) / fmeaRows.length
-    : 1;
-  return avgOccurrence >= 5 ? "F2" : "F1";
-}
-
-/**
- * Determine possibility of avoidance per ISO 13849-1.
- * P1 = possible under specific conditions, P2 = scarcely possible.
- */
-function determineAvoidance(
-  fmeaRows: ReadonlyArray<FMEARow>,
-  faultTree: FaultTreeNode
-): "P1" | "P2" {
-  const avgDetection = fmeaRows.length > 0
-    ? fmeaRows.reduce((sum, r) => sum + r.detection, 0) / fmeaRows.length
-    : 1;
-  const orGatesPresent = hasOrGates(faultTree);
-  // Poor detection or OR gates (single failure paths) = hard to avoid
-  return (avgDetection >= 6 || orGatesPresent) ? "P2" : "P1";
-}
-
-/**
- * ISO 13849-1 Figure 3 — Risk graph for PLr determination.
- */
-function determinePLrFromRiskGraph(s: "S1" | "S2", f: "F1" | "F2", p: "P1" | "P2"): PLrLevel {
-  if (s === "S1" && f === "F1") return "a";
-  if (s === "S1" && f === "F2" && p === "P1") return "a";
-  if (s === "S1" && f === "F2" && p === "P2") return "b";
-  if (s === "S2" && f === "F1" && p === "P1") return "b";
-  if (s === "S2" && f === "F1" && p === "P2") return "c";
+export function determinePLr(s: SeverityClass, f: FrequencyClass, p: AvoidanceClass): PLrLevel {
+  if (s === "S1" && f === "F1" && p === "P1") return "a";
+  if (s === "S1" && f === "F1" && p === "P2") return "b";
+  if (s === "S1" && f === "F2" && p === "P1") return "b";
+  if (s === "S1" && f === "F2" && p === "P2") return "c";
+  if (s === "S2" && f === "F1" && p === "P1") return "c";
+  if (s === "S2" && f === "F1" && p === "P2") return "d";
   if (s === "S2" && f === "F2" && p === "P1") return "d";
   return "e"; // S2, F2, P2
 }
@@ -91,7 +62,7 @@ function determinePLrFromRiskGraph(s: "S1" | "S2", f: "F1" | "F2", p: "P1" | "P2
 /**
  * Map PLr to minimum safety category per ISO 13849-1.
  */
-function plrToCategory(plr: PLrLevel): string {
+export function plrToCategory(plr: PLrLevel): string {
   const mapping: Record<PLrLevel, string> = {
     a: "B",
     b: "1",
@@ -103,65 +74,187 @@ function plrToCategory(plr: PLrLevel): string {
 }
 
 /**
- * Generate justification text.
+ * Generate ISO-compliant justification text.
  */
-function generateJustification(
-  s: "S1" | "S2",
-  f: "F1" | "F2",
-  p: "P1" | "P2",
-  plr: PLrLevel,
-  fmeaRows: ReadonlyArray<FMEARow>,
-  faultTree: FaultTreeNode
-): string {
-  const maxSev = fmeaRows.length > 0 ? Math.max(...fmeaRows.map(r => r.severity)) : 0;
-  const avgOcc = fmeaRows.length > 0
-    ? (fmeaRows.reduce((sum, r) => sum + r.occurrence, 0) / fmeaRows.length).toFixed(1)
-    : "0";
-  const avgDet = fmeaRows.length > 0
-    ? (fmeaRows.reduce((sum, r) => sum + r.detection, 0) / fmeaRows.length).toFixed(1)
-    : "0";
-  const basicEvents = countBasicEvents(faultTree);
-  const treeDepth = getTreeDepth(faultTree);
-  const orGates = hasOrGates(faultTree);
-
-  const sevReason = s === "S2"
-    ? `Severity ${s}: Max FMEA severity is ${maxSev}/10 (≥7), indicating serious/irreversible injury potential.`
-    : `Severity ${s}: Max FMEA severity is ${maxSev}/10 (<7), indicating slight/reversible injury.`;
-
-  const freqReason = f === "F2"
-    ? `Frequency ${f}: Avg occurrence is ${avgOcc}/10 (≥5), indicating frequent exposure.`
-    : `Frequency ${f}: Avg occurrence is ${avgOcc}/10 (<5), indicating infrequent exposure.`;
-
-  const avoidReason = p === "P2"
-    ? `Avoidance ${p}: Avg detection is ${avgDet}/10${orGates ? " and OR gates present in fault tree" : ""}, making hazard avoidance scarcely possible.`
-    : `Avoidance ${p}: Avg detection is ${avgDet}/10 with redundant paths, making hazard avoidance possible.`;
-
-  const treeSummary = `Fault tree: ${basicEvents} basic events, depth ${treeDepth}${orGates ? ", contains OR gates (single-point failure paths)" : ", AND gates provide redundancy"}.`;
-
-  return `${sevReason} ${freqReason} ${avoidReason} ${treeSummary} Per ISO 13849-1 risk graph: ${s}+${f}+${p} → PLr = ${plr.toUpperCase()}, minimum Category ${plrToCategory(plr)}.`;
+function generateJustification(ctx: HazardContext, plr: PLrLevel): string {
+  return [
+    `Safety Function: ${ctx.safetyFunction}.`,
+    `Hazard: ${ctx.hazard}.`,
+    `Severity (${ctx.severity}): ${ctx.severityJustification}`,
+    `Frequency (${ctx.frequency}): ${ctx.frequencyJustification}`,
+    `Avoidance (${ctx.avoidance}): ${ctx.avoidanceJustification}`,
+    `Per ISO 13849-1:2023 §4.3, Fig. 3: ${ctx.severity}+${ctx.frequency}+${ctx.avoidance} → PLr = ${plr.toUpperCase()}, minimum Category ${plrToCategory(plr)}.`,
+  ].join(" ");
 }
 
 /**
- * Calculate PLr for a system based on its FMEA data and fault tree.
+ * Validate FMEA data against the determined PLr (ISO 13849-1 §4.6).
+ * FMEA does NOT determine PLr — it validates design adequacy.
  */
-export function calculatePLr(
+export function validateWithFMEA(
+  plr: PLrLevel,
   fmeaRows: ReadonlyArray<FMEARow>,
-  faultTree: FaultTreeNode
-): PLrResult {
-  const severityClass = determineSeverityClass(fmeaRows);
-  const frequency = determineFrequency(fmeaRows);
-  const avoidance = determineAvoidance(fmeaRows, faultTree);
-  const plr = determinePLrFromRiskGraph(severityClass, frequency, avoidance);
+  faultTree?: FaultTreeNode
+): FMEAValidation {
+  if (fmeaRows.length === 0) {
+    return {
+      isConsistent: false,
+      maxSeverity: 0,
+      avgOccurrence: 0,
+      avgDetection: 0,
+      maxRpn: 0,
+      findings: ["No FMEA data available for validation."],
+    };
+  }
+
+  const maxSeverity = Math.max(...fmeaRows.map(r => r.severity));
+  const avgOccurrence = fmeaRows.reduce((s, r) => s + r.occurrence, 0) / fmeaRows.length;
+  const avgDetection = fmeaRows.reduce((s, r) => s + r.detection, 0) / fmeaRows.length;
+  const maxRpn = Math.max(...fmeaRows.map(r => r.rpn));
+  const findings: string[] = [];
+
+  // Check consistency between hazard assessment and FMEA
+  const plrIndex = ["a", "b", "c", "d", "e"].indexOf(plr);
+
+  if (plrIndex >= 3 && maxSeverity < 5) {
+    findings.push("WARNING: PLr indicates high risk but FMEA severity scores are low. Review hazard assessment or FMEA scores.");
+  }
+  if (plrIndex <= 1 && maxSeverity >= 8) {
+    findings.push("WARNING: PLr indicates low risk but FMEA severity scores are high. Review hazard assessment.");
+  }
+  if (maxRpn > 200) {
+    findings.push(`High RPN detected (max ${maxRpn}). Verify that mitigations are adequate for PLr ${plr.toUpperCase()}.`);
+  }
+  if (avgDetection > 7) {
+    findings.push("Poor average detection capability. Consider additional diagnostic coverage per ISO 13849-1 §4.5.3.");
+  }
+
+  if (faultTree) {
+    const hasOr = checkOrGates(faultTree);
+    if (hasOr && plrIndex >= 3) {
+      findings.push("OR gates in fault tree indicate single-point failure paths. Ensure architecture meets Category " + plrToCategory(plr) + " requirements.");
+    }
+  }
+
+  if (findings.length === 0) {
+    findings.push("FMEA data is consistent with the determined PLr. No discrepancies found.");
+  }
+
+  return {
+    isConsistent: findings.every(f => !f.startsWith("WARNING")),
+    maxSeverity,
+    avgOccurrence: Math.round(avgOccurrence * 10) / 10,
+    avgDetection: Math.round(avgDetection * 10) / 10,
+    maxRpn,
+    findings,
+  };
+}
+
+function checkOrGates(node: FaultTreeNode): boolean {
+  if (node.gateType === "OR") return true;
+  if (!node.children) return false;
+  return node.children.some(checkOrGates);
+}
+
+/**
+ * Calculate PLr for a system based on hazard context (NOT FMEA).
+ */
+export function calculatePLr(context: HazardContext): PLrResult {
+  const plr = determinePLr(context.severity, context.frequency, context.avoidance);
   const category = plrToCategory(plr);
-  const justification = generateJustification(severityClass, frequency, avoidance, plr, fmeaRows, faultTree);
+  const justification = generateJustification(context, plr);
+
+  const assumptions: string[] = [];
+  if (!context.severityJustification || context.severityJustification.includes("UNVERIFIED")) {
+    assumptions.push("Severity classification requires field verification");
+  }
+  if (!context.frequencyJustification || context.frequencyJustification.includes("UNVERIFIED")) {
+    assumptions.push("Frequency classification requires field verification");
+  }
+  if (!context.avoidanceJustification || context.avoidanceJustification.includes("UNVERIFIED")) {
+    assumptions.push("Avoidance classification requires field verification");
+  }
+
+  const confidence: "High" | "Medium" | "Low" = assumptions.length === 0
+    ? "High"
+    : assumptions.length <= 1
+      ? "Medium"
+      : "Low";
 
   return {
     plr,
     category,
-    severityClass,
-    frequency,
-    avoidance,
+    context,
     justification,
-    isoReference: "ISO 13849-1:2023, Clause 4.3, Figure 3 — Risk graph for determination of required performance level (PLr)",
+    isoReference: "ISO 13849-1:2023, §4.3, Figure 3 — Risk graph for determination of required performance level (PLr)",
+    confidence,
+    assumptions,
+  };
+}
+
+/** Default hazard contexts for known systems */
+export function getDefaultHazardContext(systemId: string): HazardContext {
+  const defaults: Record<string, HazardContext> = {
+    braking: {
+      safetyFunction: "Emergency braking / Service brake monitoring",
+      hazard: "Loss of braking → uncontrolled movement of TSP in tunnel",
+      severity: "S2",
+      severityJustification: "Uncontrolled movement of heavy tunnel machine (TSP >20t) can cause fatal crush injuries to personnel. Irreversible harm — S2 per ISO 13849-1 §4.3.",
+      frequency: "F2",
+      frequencyJustification: "Operators and maintenance personnel are frequently present in the tunnel workspace during machine operation. Continuous exposure — F2.",
+      avoidance: "P2",
+      avoidanceJustification: "In case of brake failure on a slope, operator cannot react fast enough to avoid collision. Confined tunnel environment eliminates escape routes — P2.",
+    },
+    steering: {
+      safetyFunction: "Steering position monitoring / Emergency steering",
+      hazard: "Loss of steering → uncontrolled trajectory in tunnel",
+      severity: "S2",
+      severityJustification: "Uncontrolled lateral movement in confined tunnel can cause collision with infrastructure or personnel. Serious/fatal injury potential — S2.",
+      frequency: "F2",
+      frequencyJustification: "Steering is continuously active during TSP operation in shared tunnel workspace — F2.",
+      avoidance: "P2",
+      avoidanceJustification: "Steering failure at operating speed leaves insufficient time/space for avoidance in tunnel — P2.",
+    },
+    hydraulic: {
+      safetyFunction: "Hydraulic pressure monitoring / Emergency shutdown",
+      hazard: "Hydraulic system failure → loss of braking/steering actuators",
+      severity: "S2",
+      severityJustification: "Hydraulic failure can cascade to brake and steering loss, causing uncontrolled machine movement — S2.",
+      frequency: "F2",
+      frequencyJustification: "Hydraulic system operates continuously during all machine movement phases — F2.",
+      avoidance: "P2",
+      avoidanceJustification: "Sudden hydraulic loss provides no warning time for operator intervention — P2.",
+    },
+    electrical: {
+      safetyFunction: "Electrical safety monitoring / Emergency stop",
+      hazard: "Electrical failure → loss of control systems",
+      severity: "S2",
+      severityJustification: "Electrical failure can cause loss of safety-critical control functions including braking signals — S2.",
+      frequency: "F2",
+      frequencyJustification: "Electrical system is continuously energized during operation with personnel present — F2.",
+      avoidance: "P1",
+      avoidanceJustification: "Emergency stop circuits provide independent shutdown capability. Some electrical failures are detectable and avoidable — P1.",
+    },
+    propulsion: {
+      safetyFunction: "Drive torque limitation / Overspeed protection",
+      hazard: "Uncontrolled acceleration or overspeed in tunnel",
+      severity: "S2",
+      severityJustification: "Overspeed in tunnel environment can cause fatal collision — S2.",
+      frequency: "F2",
+      frequencyJustification: "Propulsion system operates continuously during tunnel transit with personnel exposure — F2.",
+      avoidance: "P2",
+      avoidanceJustification: "Operator reaction time insufficient to prevent collision at elevated speed in confined space — P2.",
+    },
+  };
+
+  return defaults[systemId] ?? {
+    safetyFunction: "Safety function to be defined",
+    hazard: "Hazard to be identified",
+    severity: "S2",
+    severityJustification: "UNVERIFIED — Conservative assumption pending hazard analysis.",
+    frequency: "F2",
+    frequencyJustification: "UNVERIFIED — Conservative assumption pending exposure assessment.",
+    avoidance: "P2",
+    avoidanceJustification: "UNVERIFIED — Conservative assumption pending avoidance assessment.",
   };
 }
