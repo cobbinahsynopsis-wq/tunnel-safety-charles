@@ -102,7 +102,6 @@ function TreeNode({ node, depth = 0, onUpdate, onAddChild, onDelete }: TreeNodeP
         onUpdate(node.id, { type: "gate" });
       }
       onAddChild?.(node.id, child);
-      setExpanded(true);
     }
   }, [node, onUpdate, onAddChild]);
 
