@@ -156,6 +156,8 @@ export default function SystemAnalysis() {
         <TabsContent value="plr" className="mt-3 space-y-4">
           <SafetyFunctionsTable
             functions={system.safetyFunctions}
+            fmeaRows={system.fmea}
+            faultTree={system.faultTree}
             onUpdate={(sfId, updates) => updateSafetyFunction(systemId!, sfId, updates)}
             onAdd={(sf) => addSafetyFunction(systemId!, sf)}
             onDelete={(sfId) => deleteSafetyFunction(systemId!, sfId)}
