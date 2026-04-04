@@ -1,3 +1,5 @@
+import type { HazardContext } from "@/utils/plrCalculation";
+
 export type RiskLevel = "critical" | "high" | "medium" | "low";
 
 export interface FaultTreeNode {
