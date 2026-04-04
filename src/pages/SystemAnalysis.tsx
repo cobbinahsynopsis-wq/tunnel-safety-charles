@@ -157,11 +157,16 @@ export default function SystemAnalysis() {
         <TabsContent value="plr" className="mt-3 space-y-4">
           <SafetyFunctionsTable
             functions={system.safetyFunctions}
+            hazardContext={system.hazardContext ?? getDefaultHazardContext(systemId ?? "")}
             fmeaRows={system.fmea}
             faultTree={system.faultTree}
             onUpdate={(sfId, updates) => updateSafetyFunction(systemId!, sfId, updates)}
             onAdd={(sf) => addSafetyFunction(systemId!, sf)}
             onDelete={(sfId) => deleteSafetyFunction(systemId!, sfId)}
+            onUpdateContext={(updates) => {
+              const current = system.hazardContext ?? getDefaultHazardContext(systemId ?? "");
+              updateSystem(systemId!, { hazardContext: { ...current, ...updates } });
+            }}
           />
 
           <div className="grid grid-cols-2 gap-4">
