@@ -1,6 +1,6 @@
 import type { FaultTreeNode } from "@/data/systems";
 import { useState, useCallback } from "react";
-import { ChevronDown, ChevronRight, Plus, Trash2, Pencil } from "lucide-react";
+import { Plus, Trash2, Pencil } from "lucide-react";
 
 const nodeStyles: Record<string, string> = {
   top: "bg-risk-critical text-primary-foreground font-semibold border-risk-critical",
@@ -70,7 +70,7 @@ interface TreeNodeProps {
 }
 
 function TreeNode({ node, depth = 0, onUpdate, onAddChild, onDelete }: TreeNodeProps) {
-  const [expanded, setExpanded] = useState(depth < 2);
+  const expanded = true;
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(node.label);
   const [showGateSelector, setShowGateSelector] = useState(false);
@@ -102,7 +102,6 @@ function TreeNode({ node, depth = 0, onUpdate, onAddChild, onDelete }: TreeNodeP
         onUpdate(node.id, { type: "gate" });
       }
       onAddChild?.(node.id, child);
-      setExpanded(true);
     }
   }, [node, onUpdate, onAddChild]);
 
@@ -123,7 +122,7 @@ function TreeNode({ node, depth = 0, onUpdate, onAddChild, onDelete }: TreeNodeP
       }
 
       onAddChild?.(node.id, child);
-      setExpanded(true);
+      
     },
     [node, onUpdate, onAddChild],
   );
@@ -142,17 +141,9 @@ function TreeNode({ node, depth = 0, onUpdate, onAddChild, onDelete }: TreeNodeP
 
       <div className={depth > 0 ? "ml-4" : ""}>
         <div className="flex items-center gap-1 group">
-          <button
-            type="button"
-            onClick={() => hasChildren && setExpanded(!expanded)}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs border rounded-sm transition-colors ${nodeStyles[node.type]} ${hasChildren ? "cursor-pointer hover:shadow-sm" : "cursor-default"}`}
+          <div
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs border rounded-sm transition-colors ${nodeStyles[node.type]} cursor-default`}
           >
-            {hasChildren &&
-              (expanded ? (
-                <ChevronDown className="h-3 w-3 shrink-0" />
-              ) : (
-                <ChevronRight className="h-3 w-3 shrink-0" />
-              ))}
             {node.gateType && (
               <span
                 role="button"
@@ -200,7 +191,7 @@ function TreeNode({ node, depth = 0, onUpdate, onAddChild, onDelete }: TreeNodeP
             {node.type === "basic" && (
               <span className="ml-1 w-2 h-2 rounded-full bg-risk-medium shrink-0" />
             )}
-          </button>
+          </div>
 
           <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 transition-opacity">
             <button
