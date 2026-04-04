@@ -53,6 +53,7 @@ export interface SystemData {
   safetyFunctions: SafetyFunction[];
   consequences: string[];
   safetyMeasures: string[];
+  hazardContext?: HazardContext;
 }
 
 function getRiskLevel(s: number, p: number): RiskLevel {
