@@ -192,7 +192,7 @@ function TreeNode({ node, depth = 0, onUpdate, onAddChild, onDelete }: TreeNodeP
             {node.type === "basic" && (
               <span className="ml-1 w-2 h-2 rounded-full bg-risk-medium shrink-0" />
             )}
-          </button>
+          </div>
 
           <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 transition-opacity">
             <button
