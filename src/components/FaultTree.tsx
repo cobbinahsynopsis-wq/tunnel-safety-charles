@@ -142,17 +142,9 @@ function TreeNode({ node, depth = 0, onUpdate, onAddChild, onDelete }: TreeNodeP
 
       <div className={depth > 0 ? "ml-4" : ""}>
         <div className="flex items-center gap-1 group">
-          <button
-            type="button"
-            onClick={() => hasChildren && setExpanded(!expanded)}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs border rounded-sm transition-colors ${nodeStyles[node.type]} ${hasChildren ? "cursor-pointer hover:shadow-sm" : "cursor-default"}`}
+          <div
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs border rounded-sm transition-colors ${nodeStyles[node.type]} cursor-default`}
           >
-            {hasChildren &&
-              (expanded ? (
-                <ChevronDown className="h-3 w-3 shrink-0" />
-              ) : (
-                <ChevronRight className="h-3 w-3 shrink-0" />
-              ))}
             {node.gateType && (
               <span
                 role="button"
