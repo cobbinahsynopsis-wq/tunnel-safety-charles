@@ -1,6 +1,6 @@
 import type { FaultTreeNode } from "@/data/systems";
 import { useState, useCallback } from "react";
-import { ChevronDown, ChevronRight, Plus, Trash2, Pencil } from "lucide-react";
+import { Plus, Trash2, Pencil } from "lucide-react";
 
 const nodeStyles: Record<string, string> = {
   top: "bg-risk-critical text-primary-foreground font-semibold border-risk-critical",
