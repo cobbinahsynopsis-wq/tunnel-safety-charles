@@ -90,6 +90,14 @@ export default function SystemAnalysis() {
           </p>
         </div>
         <div className="flex items-center gap-3 text-xs">
+          <button
+            type="button"
+            onClick={() => exportSystemPDF(system, metadata, system.hazardContext ?? getDefaultHazardContext(systemId ?? ""))}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground rounded-sm text-xs font-medium hover:bg-primary/90 transition-colors"
+          >
+            <FileDown className="h-3.5 w-3.5" />
+            Export PDF
+          </button>
           {criticalCount > 0 && (
             <div className="flex items-center gap-1">
               <AlertTriangle className="h-3.5 w-3.5 text-risk-critical" />
