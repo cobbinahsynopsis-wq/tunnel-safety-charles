@@ -1,4 +1,6 @@
 import type { SystemData } from "@/data/systems";
+import type { HazardContext } from "@/utils/plrCalculation";
+import { determinePLr, plrToCategory } from "@/utils/plrCalculation";
 import type { AnalysisMetadata } from "@/context/SystemsContext";
 
 function rpnLevel(rpn: number): string {
