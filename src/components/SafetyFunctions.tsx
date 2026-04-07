@@ -296,7 +296,7 @@ export function SafetyFunctionsTable({
         </div>
       </div>
 
-      {/* STEP 2: FMEA Validation (§4.6) */}
+      {/* STEP 2: FMEA Validation (Clause 4.6) */}
       {fmeaValidation && (
         <div className="border rounded-sm overflow-hidden">
           <div className="bg-muted px-4 py-2 flex items-center justify-between">
