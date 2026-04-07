@@ -83,7 +83,7 @@ function generateJustification(ctx: HazardContext, plr: PLrLevel): string {
     `Severity (${ctx.severity}): ${ctx.severityJustification}`,
     `Frequency (${ctx.frequency}): ${ctx.frequencyJustification}`,
     `Avoidance (${ctx.avoidance}): ${ctx.avoidanceJustification}`,
-    ``Per ISO 13849-1:2023 Clause 4.3, Fig. 3: ${ctx.severity}+${ctx.frequency}+${ctx.avoidance} → PLr = ${plr.toUpperCase()}, minimum Category ${plrToCategory(plr)}.`, ${ctx.severity}+${ctx.frequency}+${ctx.avoidance} → PLr = ${plr.toUpperCase()}, minimum Category ${plrToCategory(plr)}.`,
+    `Per ISO 13849-1:2023 Clause 4.3, Fig. 3: ${ctx.severity}+${ctx.frequency}+${ctx.avoidance} → PLr = ${plr.toUpperCase()}, minimum Category ${plrToCategory(plr)}.`,, Fig. 3: ${ctx.severity}+${ctx.frequency}+${ctx.avoidance} → PLr = ${plr.toUpperCase()}, minimum Category ${plrToCategory(plr)}.`, ${ctx.severity}+${ctx.frequency}+${ctx.avoidance} → PLr = ${plr.toUpperCase()}, minimum Category ${plrToCategory(plr)}.`,
   ].join(" ");
 }
 
