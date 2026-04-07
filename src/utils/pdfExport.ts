@@ -330,9 +330,8 @@ export function exportSystemPDF(system: SystemData, metadata: AnalysisMetadata, 
             <tr style="background:#1a1a2e">
               <th style="padding:4px 8px;border:1px solid #333;font-size:10px;text-align:left">Hazard</th>
               <th style="padding:4px 8px;border:1px solid #333;font-size:10px">Severity</th>
-              <th style="padding:4px 8px;border:1px solid #333;font-size:10px">Likelihood</th>
+              <th style="padding:4px 8px;border:1px solid #333;font-size:10px">Probability</th>
               <th style="padding:4px 8px;border:1px solid #333;font-size:10px">Risk Level</th>
-              <th style="padding:4px 8px;border:1px solid #333;font-size:10px;text-align:left">Mitigation</th>
             </tr>
           </thead>
           <tbody>${riskRows}</tbody>

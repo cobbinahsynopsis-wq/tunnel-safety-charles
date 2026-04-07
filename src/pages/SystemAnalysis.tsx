@@ -6,9 +6,10 @@ import { RiskMatrix } from "@/components/RiskMatrix";
 import { FaultTree } from "@/components/FaultTree";
 import { SafetyFunctionsTable } from "@/components/SafetyFunctions";
 import { EditableCell } from "@/components/EditableCell";
-import { AlertTriangle, Shield, List, Plus, Trash2 } from "lucide-react";
+import { AlertTriangle, Shield, List, Plus, Trash2, FileDown } from "lucide-react";
 import { useState } from "react";
 import { getDefaultHazardContext, type HazardContext } from "@/utils/plrCalculation";
+import { exportSystemPDF } from "@/utils/pdfExport";
 
 function EditableList({
   items,
