@@ -129,7 +129,7 @@ export function SafetyFunctionsTable({
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 text-primary" />
             <span className="text-xs font-semibold uppercase tracking-wider">
-              Step 1 — PLr Determination (ISO 13849-1 §4.3, Fig. 3)
+              Step 1 — PLr Determination (ISO 13849-1 Clause 4.3, Fig. 3)
             </span>
           </div>
           <div className="flex items-center gap-2">
