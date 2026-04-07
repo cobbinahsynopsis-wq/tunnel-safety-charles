@@ -253,9 +253,8 @@ export function exportSystemPDF(system: SystemData, metadata: AnalysisMetadata, 
     <tr>
       <td style="padding:4px 8px;border:1px solid #333;font-size:10px">${escapeHtml(r.hazard)}</td>
       <td style="padding:4px 8px;border:1px solid #333;font-size:10px;text-align:center">${r.severity}</td>
-      <td style="padding:4px 8px;border:1px solid #333;font-size:10px;text-align:center">${r.likelihood}</td>
+      <td style="padding:4px 8px;border:1px solid #333;font-size:10px;text-align:center">${r.probability}</td>
       <td style="padding:4px 8px;border:1px solid #333;font-size:10px;text-align:center;font-weight:bold;color:${r.riskLevel === "critical" ? "#ef4444" : r.riskLevel === "high" ? "#f97316" : r.riskLevel === "medium" ? "#eab308" : "#22c55e"}">${r.riskLevel.toUpperCase()}</td>
-      <td style="padding:4px 8px;border:1px solid #333;font-size:10px">${escapeHtml(r.mitigation)}</td>
     </tr>
   `).join("");
 
