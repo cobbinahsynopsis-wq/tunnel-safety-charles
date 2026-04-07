@@ -129,7 +129,7 @@ export function SafetyFunctionsTable({
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 text-primary" />
             <span className="text-xs font-semibold uppercase tracking-wider">
-              Step 1 — PLr Determination (ISO 13849-1 §4.3, Fig. 3)
+              Step 1 — PLr Determination (ISO 13849-1 Clause 4.3, Fig. 3)
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -296,14 +296,14 @@ export function SafetyFunctionsTable({
         </div>
       </div>
 
-      {/* STEP 2: FMEA Validation (§4.6) */}
+      {/* STEP 2: FMEA Validation (Clause 4.6) */}
       {fmeaValidation && (
         <div className="border rounded-sm overflow-hidden">
           <div className="bg-muted px-4 py-2 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-primary" />
               <span className="text-xs font-semibold uppercase tracking-wider">
-                Step 2 — FMEA Validation (ISO 13849-1 §4.6 / IEC 62061 §6.7)
+                Step 2 — FMEA Validation (ISO 13849-1 Clause 4.6 / IEC 62061 Clause 6.7)
               </span>
             </div>
             <button
@@ -347,7 +347,7 @@ export function SafetyFunctionsTable({
                   </div>
                 ))}
                 <p className="text-[10px] font-mono text-muted-foreground/70 italic mt-2">
-                  Note: FMEA validates design adequacy — it does NOT determine PLr. PLr is determined solely from hazard context (S, F, P) per ISO 13849-1 §4.3.
+                  Note: FMEA validates design adequacy — it does NOT determine PLr. PLr is determined solely from hazard context (S, F, P) Note: FMEA validates design adequacy — it does NOT determine PLr. PLr is determined solely from hazard context (S, F, P) per ISO 13849-1 Clause 4.3.
                 </p>
               </div>
             )}

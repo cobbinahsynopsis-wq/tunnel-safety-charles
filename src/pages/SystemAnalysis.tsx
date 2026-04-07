@@ -6,9 +6,10 @@ import { RiskMatrix } from "@/components/RiskMatrix";
 import { FaultTree } from "@/components/FaultTree";
 import { SafetyFunctionsTable } from "@/components/SafetyFunctions";
 import { EditableCell } from "@/components/EditableCell";
-import { AlertTriangle, Shield, List, Plus, Trash2 } from "lucide-react";
+import { AlertTriangle, Shield, List, Plus, Trash2, FileDown } from "lucide-react";
 import { useState } from "react";
 import { getDefaultHazardContext, type HazardContext } from "@/utils/plrCalculation";
+import { exportSystemPDF } from "@/utils/pdfExport";
 
 function EditableList({
   items,
@@ -48,7 +49,7 @@ function EditableList({
 export default function SystemAnalysis() {
   const { systemId } = useParams<{ systemId: string }>();
   const {
-    systems, updateSystem,
+    systems, metadata, updateSystem,
     addFMEARow, updateFMEARow, deleteFMEARow,
     addRiskEntry, updateRiskEntry, deleteRiskEntry,
     addSafetyFunction, updateSafetyFunction, deleteSafetyFunction,
@@ -89,6 +90,14 @@ export default function SystemAnalysis() {
           </p>
         </div>
         <div className="flex items-center gap-3 text-xs">
+          <button
+            type="button"
+            onClick={() => exportSystemPDF(system, metadata, system.hazardContext ?? getDefaultHazardContext(systemId ?? ""))}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground rounded-sm text-xs font-medium hover:bg-primary/90 transition-colors"
+          >
+            <FileDown className="h-3.5 w-3.5" />
+            Export PDF
+          </button>
           {criticalCount > 0 && (
             <div className="flex items-center gap-1">
               <AlertTriangle className="h-3.5 w-3.5 text-risk-critical" />
