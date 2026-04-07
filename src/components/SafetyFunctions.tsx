@@ -303,7 +303,7 @@ export function SafetyFunctionsTable({
             <div className="flex items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-primary" />
               <span className="text-xs font-semibold uppercase tracking-wider">
-                Step 2 — FMEA Validation (ISO 13849-1 §4.6 / IEC 62061 §6.7)
+                Step 2 — FMEA Validation (ISO 13849-1 Clause 4.6 / IEC 62061 Clause 6.7)
               </span>
             </div>
             <button
