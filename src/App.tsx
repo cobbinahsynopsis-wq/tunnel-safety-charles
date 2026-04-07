@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SystemsProvider } from "@/context/SystemsContext";
 import { Layout } from "./components/Layout";
+import { EngineerGate } from "./components/EngineerGate";
 import Index from "./pages/Index";
 import SystemAnalysis from "./pages/SystemAnalysis";
 import Dashboard from "./pages/Dashboard";
