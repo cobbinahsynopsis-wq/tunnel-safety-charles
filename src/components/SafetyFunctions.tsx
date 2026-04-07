@@ -347,7 +347,7 @@ export function SafetyFunctionsTable({
                   </div>
                 ))}
                 <p className="text-[10px] font-mono text-muted-foreground/70 italic mt-2">
-                  Note: FMEA validates design adequacy — it does NOT determine PLr. PLr is determined solely from hazard context (S, F, P) per ISO 13849-1 §4.3.
+                  Note: FMEA validates design adequacy — it does NOT determine PLr. PLr is determined solely from hazard context (S, F, P) Note: FMEA validates design adequacy — it does NOT determine PLr. PLr is determined solely from hazard context (S, F, P) per ISO 13849-1 Clause 4.3.
                 </p>
               </div>
             )}

@@ -2,9 +2,9 @@
  * ISO 13849-1:2023 PLr Determination Engine
  * 
  * PLr is determined ONLY from hazard context parameters (S, F, P)
- * per ISO 13849-1 §4.3, Figure 3 — Risk graph.
+ * per ISO 13849-1 Clause 4.3, Figure 3 — Risk graph.
  * 
- * FMEA data is used ONLY for post-determination validation (§4.6).
+ * FMEA data is used ONLY for post-determination validation (Clause 4.6).
  */
 
 import type { FMEARow, FaultTreeNode } from "@/data/systems";
@@ -46,7 +46,7 @@ export interface FMEAValidation {
 
 /**
  * ISO 13849-1:2023 Figure 3 — Risk graph for PLr determination.
- * Maps (S, F, P) → PLr strictly per the standard.
+ * Maps (S, F, P) to PLr strictly per the standard.
  */
 export function determinePLr(s: SeverityClass, f: FrequencyClass, p: AvoidanceClass): PLrLevel {
   if (s === "S1" && f === "F1" && p === "P1") return "a";
@@ -83,12 +83,12 @@ function generateJustification(ctx: HazardContext, plr: PLrLevel): string {
     `Severity (${ctx.severity}): ${ctx.severityJustification}`,
     `Frequency (${ctx.frequency}): ${ctx.frequencyJustification}`,
     `Avoidance (${ctx.avoidance}): ${ctx.avoidanceJustification}`,
-    `Per ISO 13849-1:2023 Clause 4.3, Fig. 3: ${ctx.severity}+${ctx.frequency}+${ctx.avoidance} = PLr ${plr.toUpperCase()}, minimum Category ${plrToCategory(plr)}.`,, Fig. 3: ${ctx.severity}+${ctx.frequency}+${ctx.avoidance} → PLr = ${plr.toUpperCase()}, minimum Category ${plrToCategory(plr)}.`,, Fig. 3: ${ctx.severity}+${ctx.frequency}+${ctx.avoidance} → PLr = ${plr.toUpperCase()}, minimum Category ${plrToCategory(plr)}.`, ${ctx.severity}+${ctx.frequency}+${ctx.avoidance} → PLr = ${plr.toUpperCase()}, minimum Category ${plrToCategory(plr)}.`,
+    `Per ISO 13849-1:2023 Clause 4.3, Fig. 3: ${ctx.severity}+${ctx.frequency}+${ctx.avoidance} = PLr ${plr.toUpperCase()}, minimum Category ${plrToCategory(plr)}.`,
   ].join(" ");
 }
 
 /**
- * Validate FMEA data against the determined PLr (ISO 13849-1 §4.6).
+ * Validate FMEA data against the determined PLr (ISO 13849-1 Clause 4.6).
  * FMEA does NOT determine PLr — it validates design adequacy.
  */
 export function validateWithFMEA(
@@ -113,7 +113,6 @@ export function validateWithFMEA(
   const maxRpn = Math.max(...fmeaRows.map(r => r.rpn));
   const findings: string[] = [];
 
-  // Check consistency between hazard assessment and FMEA
   const plrIndex = ["a", "b", "c", "d", "e"].indexOf(plr);
 
   if (plrIndex >= 3 && maxSeverity < 5) {
@@ -126,7 +125,7 @@ export function validateWithFMEA(
     findings.push(`High RPN detected (max ${maxRpn}). Verify that mitigations are adequate for PLr ${plr.toUpperCase()}.`);
   }
   if (avgDetection > 7) {
-    findings.push("Poor average detection capability. Consider additional diagnostic coverage per ISO 13849-1 §4.5.3.");
+    findings.push("Poor average detection capability. Consider additional diagnostic coverage per ISO 13849-1 Clause 4.5.3.");
   }
 
   if (faultTree) {
@@ -186,7 +185,7 @@ export function calculatePLr(context: HazardContext): PLrResult {
     category,
     context,
     justification,
-    isoReference: "ISO 13849-1:2023, §4.3, Figure 3 — Risk graph for determination of required performance level (PLr)",
+    isoReference: "ISO 13849-1:2023, Clause 4.3, Figure 3 — Risk graph for determination of required performance level (PLr)",
     confidence,
     assumptions,
   };
@@ -197,9 +196,9 @@ export function getDefaultHazardContext(systemId: string): HazardContext {
   const defaults: Record<string, HazardContext> = {
     braking: {
       safetyFunction: "Emergency braking / Service brake monitoring",
-      hazard: "Loss of braking → uncontrolled movement of TSP in tunnel",
+      hazard: "Loss of braking - uncontrolled movement of TSP in tunnel",
       severity: "S2",
-      severityJustification: "Uncontrolled movement of heavy tunnel machine (TSP >20t) can cause fatal crush injuries to personnel. Irreversible harm — S2 per ISO 13849-1 §4.3.",
+      severityJustification: "Uncontrolled movement of heavy tunnel machine (TSP >20t) can cause fatal crush injuries to personnel. Irreversible harm — S2 per ISO 13849-1 Clause 4.3.",
       frequency: "F2",
       frequencyJustification: "Operators and maintenance personnel are frequently present in the tunnel workspace during machine operation. Continuous exposure — F2.",
       avoidance: "P2",
@@ -207,7 +206,7 @@ export function getDefaultHazardContext(systemId: string): HazardContext {
     },
     steering: {
       safetyFunction: "Steering position monitoring / Emergency steering",
-      hazard: "Loss of steering → uncontrolled trajectory in tunnel",
+      hazard: "Loss of steering - uncontrolled trajectory in tunnel",
       severity: "S2",
       severityJustification: "Uncontrolled lateral movement in confined tunnel can cause collision with infrastructure or personnel. Serious/fatal injury potential — S2.",
       frequency: "F2",
@@ -217,7 +216,7 @@ export function getDefaultHazardContext(systemId: string): HazardContext {
     },
     hydraulic: {
       safetyFunction: "Hydraulic pressure monitoring / Emergency shutdown",
-      hazard: "Hydraulic system failure → loss of braking/steering actuators",
+      hazard: "Hydraulic system failure - loss of braking/steering actuators",
       severity: "S2",
       severityJustification: "Hydraulic failure can cascade to brake and steering loss, causing uncontrolled machine movement — S2.",
       frequency: "F2",
@@ -227,7 +226,7 @@ export function getDefaultHazardContext(systemId: string): HazardContext {
     },
     electrical: {
       safetyFunction: "Electrical safety monitoring / Emergency stop",
-      hazard: "Electrical failure → loss of control systems",
+      hazard: "Electrical failure - loss of control systems",
       severity: "S2",
       severityJustification: "Electrical failure can cause loss of safety-critical control functions including braking signals — S2.",
       frequency: "F2",
