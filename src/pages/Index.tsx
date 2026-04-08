@@ -154,7 +154,7 @@ export default function Index() {
 
       {/* Risk Legend */}
       <div className="flex items-center gap-4 text-[10px] font-mono">
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-risk-critical" /> CRITICAL (RPN>=200)</span>
+        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-risk-critical" /> {"CRITICAL (RPN≥200)"}</span>
         <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-risk-high" /> HIGH (120-199)</span>
         <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-risk-medium" /> MEDIUM (80-119)</span>
         <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-risk-low" /> LOW (&lt;80)</span>
