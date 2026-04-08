@@ -80,8 +80,8 @@ export function AuditTrailPanel({ entries, onClear }: AuditTrailPanelProps) {
           className="bg-background border border-border rounded px-2 py-1 text-[10px] outline-none focus:border-primary"
         >
           <option value="all">All Actions</option>
-          {actionTypes.map(action => (
-            <option key={action} value={action}>{getActionLabel(action)}</option>
+          {actionTypes.map(at => (
+            <option key={at} value={at}>{getActionLabel(at as import("@/utils/auditTrail").AuditAction)}</option>
           ))}
         </select>
       </div>
