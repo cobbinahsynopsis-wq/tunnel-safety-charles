@@ -99,7 +99,7 @@ export function AuditTrailPanel({ entries, onClear }: AuditTrailPanelProps) {
                   {date.toLocaleDateString()} {date.toLocaleTimeString()}
                 </span>
                 <span className="font-semibold text-primary shrink-0 w-20 truncate">{entry.engineer}</span>
-                <span className="font-mono text-muted-foreground shrink-0 w-28">{getActionLabel(entry.action)}</span>
+                <span className="font-mono text-muted-foreground shrink-0 w-28">{getActionLabel(entry.action as import("@/utils/auditTrail").AuditAction)}</span>
                 <span className="text-foreground/70 truncate">{entry.systemName}: {entry.details}</span>
               </div>
             );
