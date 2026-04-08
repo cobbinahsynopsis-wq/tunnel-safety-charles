@@ -90,7 +90,15 @@ export default function SystemAnalysis() {
             <EditableCell value={system.description} onSave={v => updateSystem(systemId!, { description: v })} />
           </p>
         </div>
-        <div className="flex items-center gap-3 text-xs">
+        <div className="flex items-center gap-3 text-xs print-hide">
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="flex items-center gap-1.5 px-3 py-1.5 border border-border bg-card text-foreground rounded-sm text-xs font-medium hover:bg-accent transition-colors"
+          >
+            <Printer className="h-3.5 w-3.5" />
+            Print
+          </button>
           <button
             type="button"
             onClick={() => exportSystemPDF(system, metadata, system.hazardContext ?? getDefaultHazardContext(systemId ?? ""))}
