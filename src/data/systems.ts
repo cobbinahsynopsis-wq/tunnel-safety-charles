@@ -22,6 +22,8 @@ export interface FMEARow {
   detection: number;
   rpn: number;
   mitigation: string;
+  lastModifiedBy?: string;
+  lastModifiedAt?: string;
 }
 
 export interface RiskEntry {
