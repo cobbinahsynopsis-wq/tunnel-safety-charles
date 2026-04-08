@@ -187,6 +187,9 @@ export default function SystemAnalysis() {
             }}
           />
 
+          {/* SIL/PL Cross-Reference */}
+          <SILPLTable highlightPlr={calculatePLr(system.hazardContext ?? getDefaultHazardContext(systemId ?? "")).plr} />
+
           <div className="grid grid-cols-2 gap-4">
             <div className="border rounded-sm p-3">
               <div className="flex items-center gap-2 mb-2">
