@@ -115,6 +115,14 @@ export function FMEATable({ rows, onUpdate, onAdd, onDelete }: FMEATableProps) {
                 <td className="px-3 py-1.5 text-muted-foreground max-w-[200px]">
                   <EditableCell value={row.mitigation} onSave={(v) => onUpdate?.(row.id, { mitigation: v })} />
                 </td>
+                <td className="px-3 py-1.5 text-center text-[9px] text-muted-foreground font-mono">
+                  {row.lastModifiedBy && (
+                    <div>
+                      <div>{row.lastModifiedBy}</div>
+                      {row.lastModifiedAt && <div>{new Date(row.lastModifiedAt).toLocaleDateString()}</div>}
+                    </div>
+                  )}
+                </td>
                 {onDelete && (
                   <td className="px-2 py-1.5">
                     <button

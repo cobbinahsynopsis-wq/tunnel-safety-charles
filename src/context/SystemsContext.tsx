@@ -141,17 +141,19 @@ export function SystemsProvider({ children }: { children: React.ReactNode }) {
   }, [addAudit, getSystemName]);
 
   const addFMEARow = useCallback((systemId: string, row: FMEARow) => {
-    updateSystemData(systemId, s => ({ ...s, fmea: [...s.fmea, row] }));
+    const stamped = { ...row, lastModifiedBy: metadata.engineerName, lastModifiedAt: new Date().toISOString() };
+    updateSystemData(systemId, s => ({ ...s, fmea: [...s.fmea, stamped] }));
     addAudit("FMEA_ADD", systemId, getSystemName(systemId), `Added: ${row.component}`);
-  }, [updateSystemData, addAudit, getSystemName]);
+  }, [updateSystemData, addAudit, getSystemName, metadata.engineerName]);
 
   const updateFMEARow = useCallback((systemId: string, rowId: string, updates: Partial<FMEARow>) => {
+    const stamped = { ...updates, lastModifiedBy: metadata.engineerName, lastModifiedAt: new Date().toISOString() };
     updateSystemData(systemId, s => ({
       ...s,
-      fmea: s.fmea.map(r => r.id === rowId ? { ...r, ...updates } : r),
+      fmea: s.fmea.map(r => r.id === rowId ? { ...r, ...stamped } : r),
     }));
     addAudit("FMEA_UPDATE", systemId, getSystemName(systemId), `Updated row: ${Object.keys(updates).join(", ")}`);
-  }, [updateSystemData, addAudit, getSystemName]);
+  }, [updateSystemData, addAudit, getSystemName, metadata.engineerName]);
 
   const deleteFMEARow = useCallback((systemId: string, rowId: string) => {
     updateSystemData(systemId, s => ({ ...s, fmea: s.fmea.filter(r => r.id !== rowId) }));
