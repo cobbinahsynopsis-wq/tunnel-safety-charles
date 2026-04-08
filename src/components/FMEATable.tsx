@@ -68,6 +68,7 @@ export function FMEATable({ rows, onUpdate, onAdd, onDelete }: FMEATableProps) {
               <th className="px-3 py-2 font-semibold text-center font-mono">RPN</th>
               <th className="px-3 py-2 font-semibold">Risk</th>
               <th className="px-3 py-2 font-semibold">Mitigation</th>
+              <th className="px-3 py-2 font-semibold text-center font-mono">Modified By</th>
               {onDelete && <th className="px-2 py-2 w-8"></th>}
             </tr>
           </thead>
@@ -113,6 +114,14 @@ export function FMEATable({ rows, onUpdate, onAdd, onDelete }: FMEATableProps) {
                 </td>
                 <td className="px-3 py-1.5 text-muted-foreground max-w-[200px]">
                   <EditableCell value={row.mitigation} onSave={(v) => onUpdate?.(row.id, { mitigation: v })} />
+                </td>
+                <td className="px-3 py-1.5 text-center text-[9px] text-muted-foreground font-mono">
+                  {row.lastModifiedBy && (
+                    <div>
+                      <div>{row.lastModifiedBy}</div>
+                      {row.lastModifiedAt && <div>{new Date(row.lastModifiedAt).toLocaleDateString()}</div>}
+                    </div>
+                  )}
                 </td>
                 {onDelete && (
                   <td className="px-2 py-1.5">

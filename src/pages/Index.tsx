@@ -4,15 +4,19 @@ import { useSystems } from "@/context/SystemsContext";
 import { RiskBadge } from "@/components/RiskBadge";
 import { EngineerMetadata } from "@/components/EngineerMetadata";
 import { PerformanceLevelGraph } from "@/components/PerformanceLevelGraph";
+import { AuditTrailPanel } from "@/components/AuditTrailPanel";
+import { ValidationPanel } from "@/components/ValidationPanel";
+import { BackupRestorePanel } from "@/components/BackupRestorePanel";
+import { SILPLTable } from "@/components/SILPLTable";
 import { exportOverviewPDF } from "@/utils/pdfExport";
-import { Shield, Disc3, TriangleAlert, Navigation, Flame, Zap, ArrowRight, FileDown } from "lucide-react";
+import { Shield, Disc3, TriangleAlert, Navigation, Flame, Zap, ArrowRight, FileDown, Printer } from "lucide-react";
 
 const iconMap: Record<string, React.ElementType> = {
   Disc3, TriangleAlert, Navigation, Flame, Zap,
 };
 
 export default function Index() {
-  const { systems, metadata } = useSystems();
+  const { systems, metadata, auditTrail, clearAudit } = useSystems();
   const totalRisks = systems.reduce((acc, s) => acc + s.risks.length, 0);
   const criticalRisks = systems.reduce((acc, s) => acc + s.risks.filter(r => r.riskLevel === "critical").length, 0);
   const highRisks = systems.reduce((acc, s) => acc + s.risks.filter(r => r.riskLevel === "high").length, 0);
@@ -20,7 +24,7 @@ export default function Index() {
   const totalSafety = systems.reduce((acc, s) => acc + s.safetyFunctions.length, 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 print-content">
       {/* Hero */}
       <div className="relative overflow-hidden rounded border border-primary/20 bg-card/80 backdrop-blur-sm p-6">
         <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
@@ -32,13 +36,22 @@ export default function Index() {
               Moving System. Edit RPN values, add new failure modes, and export your data.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => exportOverviewPDF(systems, metadata)}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded text-xs font-semibold hover:bg-primary/90 transition-colors shrink-0"
-          >
-            <FileDown className="h-4 w-4" /> Export PDF Report
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="flex items-center gap-2 px-4 py-2 border border-border bg-card text-foreground rounded text-xs font-semibold hover:bg-accent transition-colors print-hide"
+            >
+              <Printer className="h-4 w-4" /> Print
+            </button>
+            <button
+              type="button"
+              onClick={() => exportOverviewPDF(systems, metadata)}
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded text-xs font-semibold hover:bg-primary/90 transition-colors print-hide"
+            >
+              <FileDown className="h-4 w-4" /> Export PDF Report
+            </button>
+          </div>
         </div>
       </div>
 
@@ -48,11 +61,14 @@ export default function Index() {
       {/* KPI Row */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <KPIBox label="TOTAL FAILURE MODES" value={totalFMEA} sub={`across ${systems.length} subsystems`} />
-        <KPIBox label="CRITICAL RISK (RPN≥200)" value={criticalRisks} sub="require immediate action" variant="critical" />
+        <KPIBox label="CRITICAL RISK (RPN>=200)" value={criticalRisks} sub="require immediate action" variant="critical" />
         <KPIBox label="HIGH RISK (RPN 120-199)" value={highRisks} sub="require priority action" variant="high" />
         <KPIBox label="MAXIMUM RPN" value={Math.max(...systems.flatMap(s => s.fmea.map(f => f.rpn)), 0)} sub="highest severity" />
         <KPIBox label="SAFETY FUNCTIONS" value={totalSafety} sub="ISO 13849 evaluated" />
       </div>
+
+      {/* Validation Warnings */}
+      <ValidationPanel systems={systems} />
 
       {/* Machine Specs */}
       <div className="border border-border/50 rounded bg-card/60 backdrop-blur-sm p-4">
@@ -78,6 +94,9 @@ export default function Index() {
 
       {/* Performance Level Graph */}
       <PerformanceLevelGraph systems={systems} />
+
+      {/* SIL/PL Cross-Reference */}
+      <SILPLTable />
 
       {/* System Cards */}
       <div>
@@ -127,9 +146,15 @@ export default function Index() {
         </div>
       </div>
 
+      {/* Data Backup / Restore */}
+      <BackupRestorePanel />
+
+      {/* Audit Trail */}
+      <AuditTrailPanel entries={auditTrail} onClear={clearAudit} />
+
       {/* Risk Legend */}
       <div className="flex items-center gap-4 text-[10px] font-mono">
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-risk-critical" /> CRITICAL (RPN≥200)</span>
+        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-risk-critical" /> {"CRITICAL (RPN≥200)"}</span>
         <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-risk-high" /> HIGH (120-199)</span>
         <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-risk-medium" /> MEDIUM (80-119)</span>
         <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-risk-low" /> LOW (&lt;80)</span>

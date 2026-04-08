@@ -131,3 +131,53 @@
     background-color: hsl(var(--risk-low));
   }
 }
+
+/* Print-optimized styles */
+@media print {
+  body {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    background: white !important;
+    color: black !important;
+  }
+
+  .print-hide {
+    display: none !important;
+  }
+
+  .print-content {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Hide sidebar in print */
+  [data-sidebar="sidebar"] {
+    display: none !important;
+  }
+
+  /* Make main content full width */
+  main {
+    margin-left: 0 !important;
+    padding: 12px !important;
+  }
+
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+
+  /* Force colors on tables */
+  table {
+    border-collapse: collapse !important;
+  }
+
+  th, td {
+    border: 1px solid #ccc !important;
+    padding: 4px 8px !important;
+  }
+
+  /* Show link URLs */
+  a[href]::after {
+    content: none;
+  }
+}

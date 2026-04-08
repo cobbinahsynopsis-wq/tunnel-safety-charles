@@ -5,10 +5,11 @@ import { FMEATable } from "@/components/FMEATable";
 import { RiskMatrix } from "@/components/RiskMatrix";
 import { FaultTree } from "@/components/FaultTree";
 import { SafetyFunctionsTable } from "@/components/SafetyFunctions";
+import { SILPLTable } from "@/components/SILPLTable";
 import { EditableCell } from "@/components/EditableCell";
-import { AlertTriangle, Shield, List, Plus, Trash2, FileDown } from "lucide-react";
+import { AlertTriangle, Shield, List, Plus, Trash2, FileDown, Printer } from "lucide-react";
 import { useState } from "react";
-import { getDefaultHazardContext, type HazardContext } from "@/utils/plrCalculation";
+import { getDefaultHazardContext, calculatePLr, type HazardContext } from "@/utils/plrCalculation";
 import { exportSystemPDF } from "@/utils/pdfExport";
 
 function EditableList({
@@ -89,7 +90,15 @@ export default function SystemAnalysis() {
             <EditableCell value={system.description} onSave={v => updateSystem(systemId!, { description: v })} />
           </p>
         </div>
-        <div className="flex items-center gap-3 text-xs">
+        <div className="flex items-center gap-3 text-xs print-hide">
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="flex items-center gap-1.5 px-3 py-1.5 border border-border bg-card text-foreground rounded-sm text-xs font-medium hover:bg-accent transition-colors"
+          >
+            <Printer className="h-3.5 w-3.5" />
+            Print
+          </button>
           <button
             type="button"
             onClick={() => exportSystemPDF(system, metadata, system.hazardContext ?? getDefaultHazardContext(systemId ?? ""))}
@@ -177,6 +186,9 @@ export default function SystemAnalysis() {
               updateSystem(systemId!, { hazardContext: { ...current, ...updates } });
             }}
           />
+
+          {/* SIL/PL Cross-Reference */}
+          <SILPLTable highlightPlr={calculatePLr(system.hazardContext ?? getDefaultHazardContext(systemId ?? "")).plr} />
 
           <div className="grid grid-cols-2 gap-4">
             <div className="border rounded-sm p-3">
