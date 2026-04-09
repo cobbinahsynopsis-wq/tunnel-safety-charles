@@ -22,6 +22,11 @@ export interface FMEARow {
   detection: number;
   rpn: number;
   mitigation: string;
+  residualSeverity?: number;
+  residualOccurrence?: number;
+  residualDetection?: number;
+  residualRpn?: number;
+  riskAccepted?: boolean;
   lastModifiedBy?: string;
   lastModifiedAt?: string;
 }
