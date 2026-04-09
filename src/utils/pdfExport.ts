@@ -360,14 +360,20 @@ export function exportSystemPDF(system: SystemData, metadata: AnalysisMetadata, 
       </div>
 
       ${system.fmea.length > 0 ? `
-        <h2>FMEA Analysis</h2>
+        <h2>FMEA Analysis — Risk Reduction Verification (ISO 12100)</h2>
         <table>
           <thead>
             <tr>
               <th style="text-align:left">Component</th>
               <th style="text-align:left">Failure Mode</th>
-              <th>S</th><th>O</th><th>D</th><th>RPN</th><th>Risk</th>
+              <th>S</th><th>O</th><th>D</th><th>RPN</th>
               <th style="text-align:left">Mitigation</th>
+              <th style="background:#16a34a;color:#fff">S'</th>
+              <th style="background:#16a34a;color:#fff">O'</th>
+              <th style="background:#16a34a;color:#fff">D'</th>
+              <th style="background:#16a34a;color:#fff">RPN'</th>
+              <th>↓%</th>
+              <th>OK</th>
             </tr>
           </thead>
           <tbody>${fmeaRows}</tbody>
