@@ -74,7 +74,10 @@ export function exportOverviewPDF(systems: SystemData[], metadata: AnalysisMetad
     const fmeaRows = system.fmea
       .sort((a, b) => b.rpn - a.rpn)
       .slice(0, 10)
-      .map(row => `
+      .map(row => {
+        const resRpn = row.residualRpn ?? row.rpn;
+        const reduction = row.rpn > 0 ? Math.round(((row.rpn - resRpn) / row.rpn) * 100) : 0;
+        return `
         <tr>
           <td>${escapeHtml(row.component)}</td>
           <td>${escapeHtml(row.failureMode)}</td>
@@ -82,10 +85,15 @@ export function exportOverviewPDF(systems: SystemData[], metadata: AnalysisMetad
           <td style="text-align:center">${row.occurrence}</td>
           <td style="text-align:center">${row.detection}</td>
           <td style="text-align:center;font-weight:bold;color:${rpnColor(row.rpn)}">${row.rpn}</td>
-          <td style="text-align:center;color:${rpnColor(row.rpn)};font-weight:600">${rpnLevel(row.rpn)}</td>
           <td>${escapeHtml(row.mitigation)}</td>
-        </tr>
-      `).join("");
+          <td style="text-align:center;background:#f0fdf4">${row.residualSeverity ?? row.severity}</td>
+          <td style="text-align:center;background:#f0fdf4">${row.residualOccurrence ?? row.occurrence}</td>
+          <td style="text-align:center;background:#f0fdf4">${row.residualDetection ?? row.detection}</td>
+          <td style="text-align:center;font-weight:bold;background:#f0fdf4;color:${rpnColor(resRpn)}">${resRpn}</td>
+          <td style="text-align:center;font-weight:600;color:${reduction >= 50 ? '#16a34a' : reduction >= 25 ? '#ca8a04' : '#ea580c'}">${reduction > 0 ? `↓${reduction}%` : '—'}</td>
+          <td style="text-align:center">${row.riskAccepted ? '✓' : '—'}</td>
+        </tr>`;
+      }).join("");
 
     const safetyRows = system.safetyFunctions.map(sf => `
       <tr>
