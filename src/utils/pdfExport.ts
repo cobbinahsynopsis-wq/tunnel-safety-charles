@@ -133,8 +133,14 @@ export function exportOverviewPDF(systems: SystemData[], metadata: AnalysisMetad
               <tr>
                 <th style="text-align:left">Component</th>
                 <th style="text-align:left">Failure Mode</th>
-                <th>S</th><th>O</th><th>D</th><th>RPN</th><th>Risk</th>
+                <th>S</th><th>O</th><th>D</th><th>RPN</th>
                 <th style="text-align:left">Mitigation</th>
+                <th style="background:#16a34a;color:#fff">S'</th>
+                <th style="background:#16a34a;color:#fff">O'</th>
+                <th style="background:#16a34a;color:#fff">D'</th>
+                <th style="background:#16a34a;color:#fff">RPN'</th>
+                <th>↓%</th>
+                <th>OK</th>
               </tr>
             </thead>
             <tbody>${fmeaRows}</tbody>
