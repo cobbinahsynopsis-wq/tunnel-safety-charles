@@ -10,9 +10,55 @@ function rpnLevel(rpn: number): string {
   return "LOW";
 }
 
+function rpnColor(rpn: number): string {
+  if (rpn >= 200) return "#dc2626";
+  if (rpn >= 120) return "#ea580c";
+  if (rpn >= 80) return "#ca8a04";
+  return "#16a34a";
+}
+
+function riskColor(level: string): string {
+  if (level === "critical") return "#dc2626";
+  if (level === "high") return "#ea580c";
+  if (level === "medium") return "#ca8a04";
+  return "#16a34a";
+}
+
 function escapeHtml(text: string): string {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
+
+const PRINT_STYLES = `
+  @media print { 
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+  @page { size: A4 landscape; margin: 12mm; }
+  body {
+    font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
+    background: #ffffff;
+    color: #1a1a1a;
+    margin: 0;
+    padding: 24px;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+  h1 { color: #c2410c; font-size: 20px; margin: 0 0 4px 0; }
+  h2 { color: #c2410c; font-size: 14px; margin: 16px 0 6px 0; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; }
+  h3 { color: #c2410c; font-size: 12px; margin: 12px 0 6px 0; }
+  .header { border-bottom: 3px solid #c2410c; padding-bottom: 12px; margin-bottom: 16px; }
+  .meta { display: flex; gap: 24px; margin-top: 8px; font-size: 10px; color: #6b7280; }
+  .meta strong { color: #1a1a1a; }
+  .kpi-row { display: flex; gap: 12px; margin-bottom: 16px; }
+  .kpi { padding: 10px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; text-align: center; min-width: 80px; }
+  .kpi-label { font-size: 8px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+  .kpi-value { font-size: 22px; font-weight: 700; margin-top: 2px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+  th { background: #1e293b; color: #ffffff; padding: 6px 8px; border: 1px solid #334155; font-size: 9px; text-transform: uppercase; letter-spacing: 0.3px; font-weight: 600; }
+  td { padding: 5px 8px; border: 1px solid #d1d5db; font-size: 10px; }
+  tr:nth-child(even) td { background: #f9fafb; }
+  .footer { margin-top: 24px; padding-top: 10px; border-top: 1px solid #d1d5db; font-size: 8px; color: #9ca3af; text-align: center; }
+  .page-break { page-break-before: always; margin-top: 20px; }
+`;
 
 export function exportOverviewPDF(systems: SystemData[], metadata: AnalysisMetadata): void {
   const totalFMEA = systems.reduce((acc, s) => acc + s.fmea.length, 0);
@@ -30,75 +76,70 @@ export function exportOverviewPDF(systems: SystemData[], metadata: AnalysisMetad
       .slice(0, 10)
       .map(row => `
         <tr>
-          <td style="padding:4px 8px;border:1px solid #333;font-size:10px">${escapeHtml(row.component)}</td>
-          <td style="padding:4px 8px;border:1px solid #333;font-size:10px">${escapeHtml(row.failureMode)}</td>
-          <td style="padding:4px 8px;border:1px solid #333;font-size:10px;text-align:center">${row.severity}</td>
-          <td style="padding:4px 8px;border:1px solid #333;font-size:10px;text-align:center">${row.occurrence}</td>
-          <td style="padding:4px 8px;border:1px solid #333;font-size:10px;text-align:center">${row.detection}</td>
-          <td style="padding:4px 8px;border:1px solid #333;font-size:10px;text-align:center;font-weight:bold">${row.rpn}</td>
-          <td style="padding:4px 8px;border:1px solid #333;font-size:10px">${rpnLevel(row.rpn)}</td>
-          <td style="padding:4px 8px;border:1px solid #333;font-size:10px">${escapeHtml(row.mitigation)}</td>
+          <td>${escapeHtml(row.component)}</td>
+          <td>${escapeHtml(row.failureMode)}</td>
+          <td style="text-align:center">${row.severity}</td>
+          <td style="text-align:center">${row.occurrence}</td>
+          <td style="text-align:center">${row.detection}</td>
+          <td style="text-align:center;font-weight:bold;color:${rpnColor(row.rpn)}">${row.rpn}</td>
+          <td style="text-align:center;color:${rpnColor(row.rpn)};font-weight:600">${rpnLevel(row.rpn)}</td>
+          <td>${escapeHtml(row.mitigation)}</td>
         </tr>
       `).join("");
 
     const safetyRows = system.safetyFunctions.map(sf => `
       <tr>
-        <td style="padding:4px 8px;border:1px solid #333;font-size:10px">${escapeHtml(sf.function)}</td>
-        <td style="padding:4px 8px;border:1px solid #333;font-size:10px;text-align:center;font-weight:bold">${sf.plr.toUpperCase()}</td>
-        <td style="padding:4px 8px;border:1px solid #333;font-size:10px;text-align:center">${sf.category}</td>
-        <td style="padding:4px 8px;border:1px solid #333;font-size:10px">${escapeHtml(sf.description)}</td>
+        <td>${escapeHtml(sf.function)}</td>
+        <td style="text-align:center;font-weight:bold">${sf.plr.toUpperCase()}</td>
+        <td style="text-align:center">${sf.category}</td>
+        <td>${escapeHtml(sf.description)}</td>
       </tr>
     `).join("");
 
     return `
-      <div style="page-break-before:always;margin-top:20px">
-        <h2 style="color:#f97316;font-size:16px;margin-bottom:4px">${escapeHtml(system.name)} (${escapeHtml(system.nameFr)})</h2>
-        <p style="font-size:10px;color:#888;margin-bottom:8px">${escapeHtml(system.description)}</p>
-        <div style="display:flex;gap:16px;margin-bottom:12px">
-          <div style="padding:8px 12px;background:#1a1a2e;border:1px solid #333;border-radius:4px">
-            <span style="font-size:9px;color:#888">MAX RPN</span><br/>
-            <span style="font-size:18px;font-weight:bold;color:#f97316">${sysMaxRpn}</span>
+      <div class="page-break">
+        <h2>${escapeHtml(system.name)} (${escapeHtml(system.nameFr)})</h2>
+        <p style="font-size:10px;color:#6b7280;margin-bottom:8px">${escapeHtml(system.description)}</p>
+        <div class="kpi-row">
+          <div class="kpi">
+            <div class="kpi-label">Max RPN</div>
+            <div class="kpi-value" style="color:#c2410c">${sysMaxRpn}</div>
           </div>
-          <div style="padding:8px 12px;background:#1a1a2e;border:1px solid #333;border-radius:4px">
-            <span style="font-size:9px;color:#888">CRITICAL</span><br/>
-            <span style="font-size:18px;font-weight:bold;color:#ef4444">${sysCritical}</span>
+          <div class="kpi">
+            <div class="kpi-label">Critical</div>
+            <div class="kpi-value" style="color:#dc2626">${sysCritical}</div>
           </div>
-          <div style="padding:8px 12px;background:#1a1a2e;border:1px solid #333;border-radius:4px">
-            <span style="font-size:9px;color:#888">FMEA ITEMS</span><br/>
-            <span style="font-size:18px;font-weight:bold">${system.fmea.length}</span>
+          <div class="kpi">
+            <div class="kpi-label">FMEA Items</div>
+            <div class="kpi-value">${system.fmea.length}</div>
           </div>
-          <div style="padding:8px 12px;background:#1a1a2e;border:1px solid #333;border-radius:4px">
-            <span style="font-size:9px;color:#888">SAFETY FN</span><br/>
-            <span style="font-size:18px;font-weight:bold">${system.safetyFunctions.length}</span>
+          <div class="kpi">
+            <div class="kpi-label">Safety Fn</div>
+            <div class="kpi-value">${system.safetyFunctions.length}</div>
           </div>
         </div>
         ${system.fmea.length > 0 ? `
-          <h3 style="font-size:12px;color:#f97316;margin-bottom:6px">FMEA Analysis (Top ${Math.min(10, system.fmea.length)})</h3>
-          <table style="width:100%;border-collapse:collapse;margin-bottom:12px">
+          <h3>FMEA Analysis (Top ${Math.min(10, system.fmea.length)})</h3>
+          <table>
             <thead>
-              <tr style="background:#1a1a2e">
-                <th style="padding:4px 8px;border:1px solid #333;font-size:10px;text-align:left">Component</th>
-                <th style="padding:4px 8px;border:1px solid #333;font-size:10px;text-align:left">Failure Mode</th>
-                <th style="padding:4px 8px;border:1px solid #333;font-size:10px">S</th>
-                <th style="padding:4px 8px;border:1px solid #333;font-size:10px">O</th>
-                <th style="padding:4px 8px;border:1px solid #333;font-size:10px">D</th>
-                <th style="padding:4px 8px;border:1px solid #333;font-size:10px">RPN</th>
-                <th style="padding:4px 8px;border:1px solid #333;font-size:10px">Risk</th>
-                <th style="padding:4px 8px;border:1px solid #333;font-size:10px;text-align:left">Mitigation</th>
+              <tr>
+                <th style="text-align:left">Component</th>
+                <th style="text-align:left">Failure Mode</th>
+                <th>S</th><th>O</th><th>D</th><th>RPN</th><th>Risk</th>
+                <th style="text-align:left">Mitigation</th>
               </tr>
             </thead>
             <tbody>${fmeaRows}</tbody>
           </table>
         ` : ""}
         ${system.safetyFunctions.length > 0 ? `
-          <h3 style="font-size:12px;color:#f97316;margin-bottom:6px">Safety Functions (ISO 13849)</h3>
-          <table style="width:100%;border-collapse:collapse">
+          <h3>Safety Functions (ISO 13849)</h3>
+          <table>
             <thead>
-              <tr style="background:#1a1a2e">
-                <th style="padding:4px 8px;border:1px solid #333;font-size:10px;text-align:left">Function</th>
-                <th style="padding:4px 8px;border:1px solid #333;font-size:10px">PLr</th>
-                <th style="padding:4px 8px;border:1px solid #333;font-size:10px">Cat.</th>
-                <th style="padding:4px 8px;border:1px solid #333;font-size:10px;text-align:left">Description</th>
+              <tr>
+                <th style="text-align:left">Function</th>
+                <th>PLr</th><th>Cat.</th>
+                <th style="text-align:left">Description</th>
               </tr>
             </thead>
             <tbody>${safetyRows}</tbody>
@@ -113,56 +154,52 @@ export function exportOverviewPDF(systems: SystemData[], metadata: AnalysisMetad
     <html>
     <head>
       <meta charset="utf-8"/>
-      <title>TSP/MSV Safety Analysis Report</title>
-      <style>
-        @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
-        body { font-family: Arial, Helvetica, sans-serif; background: #0f0f1a; color: #e0e0e0; margin: 0; padding: 24px; }
-        @page { size: A4 landscape; margin: 12mm; }
-      </style>
+      <title>Tunnel Vehicle System — Safety Analysis Report</title>
+      <style>${PRINT_STYLES}</style>
     </head>
     <body>
-      <div style="border-bottom:2px solid #f97316;padding-bottom:12px;margin-bottom:16px">
-        <h1 style="color:#f97316;font-size:22px;margin:0">TSP/MSV Safety Analysis Report</h1>
-        <div style="display:flex;gap:24px;margin-top:8px;font-size:11px;color:#888">
-          <span>Engineer: <strong style="color:#e0e0e0">${escapeHtml(metadata.engineerName || "Not specified")}</strong></span>
-          <span>Date: <strong style="color:#e0e0e0">${metadata.date}</strong></span>
-          <span>Generated: <strong style="color:#e0e0e0">${new Date().toLocaleString()}</strong></span>
+      <div class="header">
+        <h1>Tunnel Vehicle System — Safety Analysis Report</h1>
+        <div class="meta">
+          <span>Engineer: <strong>${escapeHtml(metadata.engineerName || "Not specified")}</strong></span>
+          <span>Date: <strong>${metadata.date}</strong></span>
+          <span>Generated: <strong>${new Date().toLocaleString()}</strong></span>
         </div>
-        ${metadata.notes ? `<p style="font-size:10px;color:#888;margin-top:4px">Notes: ${escapeHtml(metadata.notes)}</p>` : ""}
+        ${metadata.notes ? `<p style="font-size:10px;color:#6b7280;margin-top:4px">Notes: ${escapeHtml(metadata.notes)}</p>` : ""}
       </div>
 
-      <h2 style="color:#f97316;font-size:14px;margin-bottom:8px">Executive Summary</h2>
-      <div style="display:flex;gap:16px;margin-bottom:16px">
-        <div style="padding:12px 16px;background:#1a1a2e;border:1px solid #333;border-radius:4px;flex:1">
-          <span style="font-size:9px;color:#888;text-transform:uppercase">Total Failure Modes</span><br/>
-          <span style="font-size:24px;font-weight:bold">${totalFMEA}</span>
+      <h2>Executive Summary</h2>
+      <div class="kpi-row">
+        <div class="kpi">
+          <div class="kpi-label">Total Failure Modes</div>
+          <div class="kpi-value">${totalFMEA}</div>
         </div>
-        <div style="padding:12px 16px;background:#1a1a2e;border:1px solid #f43f5e30;border-radius:4px;flex:1">
-          <span style="font-size:9px;color:#888;text-transform:uppercase">Critical Risks</span><br/>
-          <span style="font-size:24px;font-weight:bold;color:#ef4444">${criticalRisks}</span>
+        <div class="kpi">
+          <div class="kpi-label">Critical Risks</div>
+          <div class="kpi-value" style="color:#dc2626">${criticalRisks}</div>
         </div>
-        <div style="padding:12px 16px;background:#1a1a2e;border:1px solid #f9731630;border-radius:4px;flex:1">
-          <span style="font-size:9px;color:#888;text-transform:uppercase">High Risks</span><br/>
-          <span style="font-size:24px;font-weight:bold;color:#f97316">${highRisks}</span>
+        <div class="kpi">
+          <div class="kpi-label">High Risks</div>
+          <div class="kpi-value" style="color:#ea580c">${highRisks}</div>
         </div>
-        <div style="padding:12px 16px;background:#1a1a2e;border:1px solid #333;border-radius:4px;flex:1">
-          <span style="font-size:9px;color:#888;text-transform:uppercase">Max RPN</span><br/>
-          <span style="font-size:24px;font-weight:bold;color:#f97316">${maxRpn}</span>
+        <div class="kpi">
+          <div class="kpi-label">Max RPN</div>
+          <div class="kpi-value" style="color:#c2410c">${maxRpn}</div>
         </div>
-        <div style="padding:12px 16px;background:#1a1a2e;border:1px solid #333;border-radius:4px;flex:1">
-          <span style="font-size:9px;color:#888;text-transform:uppercase">Avg RPN</span><br/>
-          <span style="font-size:24px;font-weight:bold">${avgRpn}</span>
+        <div class="kpi">
+          <div class="kpi-label">Avg RPN</div>
+          <div class="kpi-value">${avgRpn}</div>
         </div>
-        <div style="padding:12px 16px;background:#1a1a2e;border:1px solid #333;border-radius:4px;flex:1">
-          <span style="font-size:9px;color:#888;text-transform:uppercase">Subsystems</span><br/>
-          <span style="font-size:24px;font-weight:bold">${systems.length}</span>
+        <div class="kpi">
+          <div class="kpi-label">Subsystems</div>
+          <div class="kpi-value">${systems.length}</div>
         </div>
       </div>
 
       ${systemSections}
 
-      <div style="margin-top:32px;padding-top:12px;border-top:1px solid #333;font-size:9px;color:#666;text-align:center">
-        TSP/MSV Safety Analysis Report — ISO 12100 / ISO 13849 — Generated ${new Date().toISOString().split("T")[0]}
+      <div class="footer">
+        Tunnel Vehicle System — Safety Analysis Report — ISO 12100 / ISO 13849 — Generated ${new Date().toISOString().split("T")[0]}
         ${metadata.engineerName ? ` — Prepared by ${escapeHtml(metadata.engineerName)}` : ""}
       </div>
     </body>
@@ -188,23 +225,23 @@ export function exportSystemPDF(system: SystemData, metadata: AnalysisMetadata, 
     .sort((a, b) => b.rpn - a.rpn)
     .map(row => `
       <tr>
-        <td style="padding:4px 8px;border:1px solid #333;font-size:10px">${escapeHtml(row.component)}</td>
-        <td style="padding:4px 8px;border:1px solid #333;font-size:10px">${escapeHtml(row.failureMode)}</td>
-        <td style="padding:4px 8px;border:1px solid #333;font-size:10px;text-align:center">${row.severity}</td>
-        <td style="padding:4px 8px;border:1px solid #333;font-size:10px;text-align:center">${row.occurrence}</td>
-        <td style="padding:4px 8px;border:1px solid #333;font-size:10px;text-align:center">${row.detection}</td>
-        <td style="padding:4px 8px;border:1px solid #333;font-size:10px;text-align:center;font-weight:bold">${row.rpn}</td>
-        <td style="padding:4px 8px;border:1px solid #333;font-size:10px">${rpnLevel(row.rpn)}</td>
-        <td style="padding:4px 8px;border:1px solid #333;font-size:10px">${escapeHtml(row.mitigation)}</td>
+        <td>${escapeHtml(row.component)}</td>
+        <td>${escapeHtml(row.failureMode)}</td>
+        <td style="text-align:center">${row.severity}</td>
+        <td style="text-align:center">${row.occurrence}</td>
+        <td style="text-align:center">${row.detection}</td>
+        <td style="text-align:center;font-weight:bold;color:${rpnColor(row.rpn)}">${row.rpn}</td>
+        <td style="text-align:center;color:${rpnColor(row.rpn)};font-weight:600">${rpnLevel(row.rpn)}</td>
+        <td>${escapeHtml(row.mitigation)}</td>
       </tr>
     `).join("");
 
   const safetyRows = system.safetyFunctions.map(sf => `
     <tr>
-      <td style="padding:4px 8px;border:1px solid #333;font-size:10px">${escapeHtml(sf.function)}</td>
-      <td style="padding:4px 8px;border:1px solid #333;font-size:10px;text-align:center;font-weight:bold">${sf.plr.toUpperCase()}</td>
-      <td style="padding:4px 8px;border:1px solid #333;font-size:10px;text-align:center">${sf.category}</td>
-      <td style="padding:4px 8px;border:1px solid #333;font-size:10px">${escapeHtml(sf.description)}</td>
+      <td>${escapeHtml(sf.function)}</td>
+      <td style="text-align:center;font-weight:bold">${sf.plr.toUpperCase()}</td>
+      <td style="text-align:center">${sf.category}</td>
+      <td>${escapeHtml(sf.description)}</td>
     </tr>
   `).join("");
 
@@ -213,37 +250,37 @@ export function exportSystemPDF(system: SystemData, metadata: AnalysisMetadata, 
     const plr = determinePLr(hazardContext.severity, hazardContext.frequency, hazardContext.avoidance);
     const cat = plrToCategory(plr);
     plrSection = `
-      <h3 style="font-size:12px;color:#f97316;margin-top:16px;margin-bottom:6px">PLr Determination (ISO 13849-1 Clause 4.3)</h3>
-      <table style="width:100%;border-collapse:collapse;margin-bottom:12px">
+      <h3>PLr Determination (ISO 13849-1 Clause 4.3)</h3>
+      <table>
         <tr>
-          <td style="padding:6px 10px;border:1px solid #333;font-size:10px;background:#1a1a2e;width:25%"><strong>Safety Function</strong></td>
-          <td style="padding:6px 10px;border:1px solid #333;font-size:10px" colspan="3">${escapeHtml(hazardContext.safetyFunction)}</td>
+          <td style="background:#f1f5f9;width:25%;font-weight:600">Safety Function</td>
+          <td colspan="3">${escapeHtml(hazardContext.safetyFunction)}</td>
         </tr>
         <tr>
-          <td style="padding:6px 10px;border:1px solid #333;font-size:10px;background:#1a1a2e"><strong>Hazard</strong></td>
-          <td style="padding:6px 10px;border:1px solid #333;font-size:10px" colspan="3">${escapeHtml(hazardContext.hazard)}</td>
+          <td style="background:#f1f5f9;font-weight:600">Hazard</td>
+          <td colspan="3">${escapeHtml(hazardContext.hazard)}</td>
         </tr>
         <tr>
-          <td style="padding:6px 10px;border:1px solid #333;font-size:10px;background:#1a1a2e"><strong>Severity</strong></td>
-          <td style="padding:6px 10px;border:1px solid #333;font-size:10px">${hazardContext.severity}</td>
-          <td style="padding:6px 10px;border:1px solid #333;font-size:10px;background:#1a1a2e"><strong>Justification</strong></td>
-          <td style="padding:6px 10px;border:1px solid #333;font-size:10px">${escapeHtml(hazardContext.severityJustification)}</td>
+          <td style="background:#f1f5f9;font-weight:600">Severity</td>
+          <td>${hazardContext.severity}</td>
+          <td style="background:#f1f5f9;font-weight:600">Justification</td>
+          <td>${escapeHtml(hazardContext.severityJustification)}</td>
         </tr>
         <tr>
-          <td style="padding:6px 10px;border:1px solid #333;font-size:10px;background:#1a1a2e"><strong>Frequency</strong></td>
-          <td style="padding:6px 10px;border:1px solid #333;font-size:10px">${hazardContext.frequency}</td>
-          <td style="padding:6px 10px;border:1px solid #333;font-size:10px;background:#1a1a2e"><strong>Justification</strong></td>
-          <td style="padding:6px 10px;border:1px solid #333;font-size:10px">${escapeHtml(hazardContext.frequencyJustification)}</td>
+          <td style="background:#f1f5f9;font-weight:600">Frequency</td>
+          <td>${hazardContext.frequency}</td>
+          <td style="background:#f1f5f9;font-weight:600">Justification</td>
+          <td>${escapeHtml(hazardContext.frequencyJustification)}</td>
         </tr>
         <tr>
-          <td style="padding:6px 10px;border:1px solid #333;font-size:10px;background:#1a1a2e"><strong>Avoidance</strong></td>
-          <td style="padding:6px 10px;border:1px solid #333;font-size:10px">${hazardContext.avoidance}</td>
-          <td style="padding:6px 10px;border:1px solid #333;font-size:10px;background:#1a1a2e"><strong>Justification</strong></td>
-          <td style="padding:6px 10px;border:1px solid #333;font-size:10px">${escapeHtml(hazardContext.avoidanceJustification)}</td>
+          <td style="background:#f1f5f9;font-weight:600">Avoidance</td>
+          <td>${hazardContext.avoidance}</td>
+          <td style="background:#f1f5f9;font-weight:600">Justification</td>
+          <td>${escapeHtml(hazardContext.avoidanceJustification)}</td>
         </tr>
-        <tr style="background:#1a1a2e">
-          <td style="padding:8px 10px;border:1px solid #333;font-size:12px" colspan="2"><strong>Result: PLr = ${plr.toUpperCase()}</strong></td>
-          <td style="padding:8px 10px;border:1px solid #333;font-size:12px" colspan="2"><strong>Minimum Category: ${cat}</strong></td>
+        <tr style="background:#f0fdf4">
+          <td colspan="2" style="font-size:12px;font-weight:700;color:#16a34a;padding:8px 10px">Result: PLr = ${plr.toUpperCase()}</td>
+          <td colspan="2" style="font-size:12px;font-weight:700;color:#16a34a;padding:8px 10px">Minimum Category: ${cat}</td>
         </tr>
       </table>
     `;
@@ -251,10 +288,10 @@ export function exportSystemPDF(system: SystemData, metadata: AnalysisMetadata, 
 
   const riskRows = system.risks.map(r => `
     <tr>
-      <td style="padding:4px 8px;border:1px solid #333;font-size:10px">${escapeHtml(r.hazard)}</td>
-      <td style="padding:4px 8px;border:1px solid #333;font-size:10px;text-align:center">${r.severity}</td>
-      <td style="padding:4px 8px;border:1px solid #333;font-size:10px;text-align:center">${r.probability}</td>
-      <td style="padding:4px 8px;border:1px solid #333;font-size:10px;text-align:center;font-weight:bold;color:${r.riskLevel === "critical" ? "#ef4444" : r.riskLevel === "high" ? "#f97316" : r.riskLevel === "medium" ? "#eab308" : "#22c55e"}">${r.riskLevel.toUpperCase()}</td>
+      <td>${escapeHtml(r.hazard)}</td>
+      <td style="text-align:center">${r.severity}</td>
+      <td style="text-align:center">${r.probability}</td>
+      <td style="text-align:center;font-weight:bold;color:${riskColor(r.riskLevel)}">${r.riskLevel.toUpperCase()}</td>
     </tr>
   `).join("");
 
@@ -264,59 +301,51 @@ export function exportSystemPDF(system: SystemData, metadata: AnalysisMetadata, 
     <head>
       <meta charset="utf-8"/>
       <title>${escapeHtml(system.name)} — Safety Analysis Report</title>
-      <style>
-        @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
-        body { font-family: Arial, Helvetica, sans-serif; background: #0f0f1a; color: #e0e0e0; margin: 0; padding: 24px; }
-        @page { size: A4 landscape; margin: 12mm; }
-      </style>
+      <style>${PRINT_STYLES}</style>
     </head>
     <body>
-      <div style="border-bottom:2px solid #f97316;padding-bottom:12px;margin-bottom:16px">
-        <h1 style="color:#f97316;font-size:22px;margin:0">${escapeHtml(system.name)} (${escapeHtml(system.nameFr)})</h1>
-        <p style="font-size:10px;color:#888;margin:4px 0">${escapeHtml(system.description)}</p>
-        <div style="display:flex;gap:24px;margin-top:8px;font-size:11px;color:#888">
-          <span>Engineer: <strong style="color:#e0e0e0">${escapeHtml(metadata.engineerName || "Not specified")}</strong></span>
-          <span>Date: <strong style="color:#e0e0e0">${metadata.date}</strong></span>
-          <span>Generated: <strong style="color:#e0e0e0">${new Date().toLocaleString()}</strong></span>
+      <div class="header">
+        <h1>${escapeHtml(system.name)} (${escapeHtml(system.nameFr)})</h1>
+        <p style="font-size:10px;color:#6b7280;margin:4px 0">${escapeHtml(system.description)}</p>
+        <div class="meta">
+          <span>Engineer: <strong>${escapeHtml(metadata.engineerName || "Not specified")}</strong></span>
+          <span>Date: <strong>${metadata.date}</strong></span>
+          <span>Generated: <strong>${new Date().toLocaleString()}</strong></span>
         </div>
       </div>
 
-      <div style="display:flex;gap:16px;margin-bottom:16px">
-        <div style="padding:8px 12px;background:#1a1a2e;border:1px solid #333;border-radius:4px">
-          <span style="font-size:9px;color:#888">MAX RPN</span><br/>
-          <span style="font-size:18px;font-weight:bold;color:#f97316">${sysMaxRpn}</span>
+      <div class="kpi-row">
+        <div class="kpi">
+          <div class="kpi-label">Max RPN</div>
+          <div class="kpi-value" style="color:#c2410c">${sysMaxRpn}</div>
         </div>
-        <div style="padding:8px 12px;background:#1a1a2e;border:1px solid #333;border-radius:4px">
-          <span style="font-size:9px;color:#888">CRITICAL</span><br/>
-          <span style="font-size:18px;font-weight:bold;color:#ef4444">${sysCritical}</span>
+        <div class="kpi">
+          <div class="kpi-label">Critical</div>
+          <div class="kpi-value" style="color:#dc2626">${sysCritical}</div>
         </div>
-        <div style="padding:8px 12px;background:#1a1a2e;border:1px solid #333;border-radius:4px">
-          <span style="font-size:9px;color:#888">HIGH</span><br/>
-          <span style="font-size:18px;font-weight:bold;color:#f97316">${sysHigh}</span>
+        <div class="kpi">
+          <div class="kpi-label">High</div>
+          <div class="kpi-value" style="color:#ea580c">${sysHigh}</div>
         </div>
-        <div style="padding:8px 12px;background:#1a1a2e;border:1px solid #333;border-radius:4px">
-          <span style="font-size:9px;color:#888">FMEA ITEMS</span><br/>
-          <span style="font-size:18px;font-weight:bold">${system.fmea.length}</span>
+        <div class="kpi">
+          <div class="kpi-label">FMEA Items</div>
+          <div class="kpi-value">${system.fmea.length}</div>
         </div>
-        <div style="padding:8px 12px;background:#1a1a2e;border:1px solid #333;border-radius:4px">
-          <span style="font-size:9px;color:#888">SAFETY FN</span><br/>
-          <span style="font-size:18px;font-weight:bold">${system.safetyFunctions.length}</span>
+        <div class="kpi">
+          <div class="kpi-label">Safety Fn</div>
+          <div class="kpi-value">${system.safetyFunctions.length}</div>
         </div>
       </div>
 
       ${system.fmea.length > 0 ? `
-        <h2 style="font-size:14px;color:#f97316;margin-bottom:6px">FMEA Analysis</h2>
-        <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
+        <h2>FMEA Analysis</h2>
+        <table>
           <thead>
-            <tr style="background:#1a1a2e">
-              <th style="padding:4px 8px;border:1px solid #333;font-size:10px;text-align:left">Component</th>
-              <th style="padding:4px 8px;border:1px solid #333;font-size:10px;text-align:left">Failure Mode</th>
-              <th style="padding:4px 8px;border:1px solid #333;font-size:10px">S</th>
-              <th style="padding:4px 8px;border:1px solid #333;font-size:10px">O</th>
-              <th style="padding:4px 8px;border:1px solid #333;font-size:10px">D</th>
-              <th style="padding:4px 8px;border:1px solid #333;font-size:10px">RPN</th>
-              <th style="padding:4px 8px;border:1px solid #333;font-size:10px">Risk</th>
-              <th style="padding:4px 8px;border:1px solid #333;font-size:10px;text-align:left">Mitigation</th>
+            <tr>
+              <th style="text-align:left">Component</th>
+              <th style="text-align:left">Failure Mode</th>
+              <th>S</th><th>O</th><th>D</th><th>RPN</th><th>Risk</th>
+              <th style="text-align:left">Mitigation</th>
             </tr>
           </thead>
           <tbody>${fmeaRows}</tbody>
@@ -324,14 +353,12 @@ export function exportSystemPDF(system: SystemData, metadata: AnalysisMetadata, 
       ` : ""}
 
       ${system.risks.length > 0 ? `
-        <h2 style="font-size:14px;color:#f97316;margin-bottom:6px">Risk Matrix</h2>
-        <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
+        <h2>Risk Matrix</h2>
+        <table>
           <thead>
-            <tr style="background:#1a1a2e">
-              <th style="padding:4px 8px;border:1px solid #333;font-size:10px;text-align:left">Hazard</th>
-              <th style="padding:4px 8px;border:1px solid #333;font-size:10px">Severity</th>
-              <th style="padding:4px 8px;border:1px solid #333;font-size:10px">Probability</th>
-              <th style="padding:4px 8px;border:1px solid #333;font-size:10px">Risk Level</th>
+            <tr>
+              <th style="text-align:left">Hazard</th>
+              <th>Severity</th><th>Probability</th><th>Risk Level</th>
             </tr>
           </thead>
           <tbody>${riskRows}</tbody>
@@ -339,14 +366,13 @@ export function exportSystemPDF(system: SystemData, metadata: AnalysisMetadata, 
       ` : ""}
 
       ${system.safetyFunctions.length > 0 ? `
-        <h2 style="font-size:14px;color:#f97316;margin-bottom:6px">Safety Functions (ISO 13849)</h2>
-        <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
+        <h2>Safety Functions (ISO 13849)</h2>
+        <table>
           <thead>
-            <tr style="background:#1a1a2e">
-              <th style="padding:4px 8px;border:1px solid #333;font-size:10px;text-align:left">Function</th>
-              <th style="padding:4px 8px;border:1px solid #333;font-size:10px">PLr</th>
-              <th style="padding:4px 8px;border:1px solid #333;font-size:10px">Cat.</th>
-              <th style="padding:4px 8px;border:1px solid #333;font-size:10px;text-align:left">Description</th>
+            <tr>
+              <th style="text-align:left">Function</th>
+              <th>PLr</th><th>Cat.</th>
+              <th style="text-align:left">Description</th>
             </tr>
           </thead>
           <tbody>${safetyRows}</tbody>
@@ -356,20 +382,20 @@ export function exportSystemPDF(system: SystemData, metadata: AnalysisMetadata, 
       ${plrSection}
 
       ${system.safetyMeasures.length > 0 ? `
-        <h2 style="font-size:14px;color:#f97316;margin-bottom:6px">Safety Measures</h2>
-        <ul style="font-size:10px;margin:0 0 16px 16px;padding:0">
-          ${system.safetyMeasures.map(m => `<li style="margin-bottom:2px">${escapeHtml(m)}</li>`).join("")}
+        <h2>Safety Measures</h2>
+        <ul style="font-size:10px;margin:0 0 14px 18px;padding:0">
+          ${system.safetyMeasures.map(m => `<li style="margin-bottom:3px">${escapeHtml(m)}</li>`).join("")}
         </ul>
       ` : ""}
 
       ${system.consequences.length > 0 ? `
-        <h2 style="font-size:14px;color:#f97316;margin-bottom:6px">Consequences</h2>
-        <ul style="font-size:10px;margin:0 0 16px 16px;padding:0">
-          ${system.consequences.map(c => `<li style="margin-bottom:2px">${escapeHtml(c)}</li>`).join("")}
+        <h2>Consequences</h2>
+        <ul style="font-size:10px;margin:0 0 14px 18px;padding:0">
+          ${system.consequences.map(c => `<li style="margin-bottom:3px">${escapeHtml(c)}</li>`).join("")}
         </ul>
       ` : ""}
 
-      <div style="margin-top:32px;padding-top:12px;border-top:1px solid #333;font-size:9px;color:#666;text-align:center">
+      <div class="footer">
         ${escapeHtml(system.name)} — Safety Analysis Report — ISO 12100 / ISO 13849 — Generated ${new Date().toISOString().split("T")[0]}
         ${metadata.engineerName ? ` — Prepared by ${escapeHtml(metadata.engineerName)}` : ""}
       </div>
