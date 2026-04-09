@@ -134,49 +134,117 @@
 
 /* Print-optimized styles */
 @media print {
-  body {
+  * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-    background: white !important;
-    color: black !important;
   }
 
-  .print-hide {
+  body,
+  html {
+    background: #ffffff !important;
+    color: #1a1a1a !important;
+    font-size: 11px !important;
+  }
+
+  .print-hide,
+  [data-sidebar="sidebar"],
+  .sidebar-trigger,
+  button:not(.print-keep) {
     display: none !important;
   }
 
+  main,
   .print-content {
-    padding: 0 !important;
     margin: 0 !important;
+    padding: 8px !important;
+    width: 100% !important;
+    max-width: 100% !important;
   }
 
-  /* Hide sidebar in print */
-  [data-sidebar="sidebar"] {
-    display: none !important;
+  /* Override dark theme for print */
+  [class*="bg-card"],
+  [class*="bg-muted"],
+  [class*="bg-background"],
+  [class*="bg-sidebar"],
+  [class*="bg-accent"] {
+    background: #ffffff !important;
   }
 
-  /* Make main content full width */
-  main {
-    margin-left: 0 !important;
-    padding: 12px !important;
+  [class*="text-foreground"],
+  [class*="text-card-foreground"],
+  [class*="text-muted-foreground"],
+  h1, h2, h3, h4, p, span, div, td, th {
+    color: #1a1a1a !important;
+  }
+
+  [class*="text-primary"] {
+    color: #c2410c !important;
+  }
+
+  [class*="border"] {
+    border-color: #d1d5db !important;
   }
 
   @page {
     size: A4 landscape;
-    margin: 10mm;
+    margin: 12mm;
   }
 
-  /* Force colors on tables */
   table {
     border-collapse: collapse !important;
+    width: 100% !important;
   }
 
-  th, td {
-    border: 1px solid #ccc !important;
-    padding: 4px 8px !important;
+  th {
+    background: #f3f4f6 !important;
+    color: #1a1a1a !important;
+    font-weight: 700 !important;
+    border: 1px solid #9ca3af !important;
+    padding: 6px 8px !important;
+    font-size: 10px !important;
   }
 
-  /* Show link URLs */
+  td {
+    border: 1px solid #d1d5db !important;
+    padding: 5px 8px !important;
+    font-size: 10px !important;
+    color: #1a1a1a !important;
+  }
+
+  tr:nth-child(even) td {
+    background: #f9fafb !important;
+  }
+
+  /* Risk colors for print */
+  .text-risk-critical,
+  [class*="risk-critical"] {
+    color: #dc2626 !important;
+  }
+
+  .text-risk-high,
+  [class*="risk-high"] {
+    color: #ea580c !important;
+  }
+
+  .text-risk-medium,
+  [class*="risk-medium"] {
+    color: #ca8a04 !important;
+  }
+
+  .text-risk-low,
+  [class*="risk-low"] {
+    color: #16a34a !important;
+  }
+
+  /* Tabs - show all content */
+  [role="tablist"] {
+    display: none !important;
+  }
+
+  [role="tabpanel"][data-state="inactive"] {
+    display: block !important;
+  }
+
   a[href]::after {
     content: none;
   }

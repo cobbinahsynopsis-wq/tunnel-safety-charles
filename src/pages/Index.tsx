@@ -30,7 +30,7 @@ export default function Index() {
         <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-primary">TSP/MSV Safety Analysis</h1>
+            <h1 className="text-2xl font-bold text-primary">Tunnel Vehicle System — Safety Analysis</h1>
             <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
               Interactive Failure Mode & Effects Analysis (FMEA) and Fault Tree Analysis (FTA) for a Tunnel
               Moving System. Edit RPN values, add new failure modes, and export your data.

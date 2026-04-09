@@ -36,7 +36,7 @@ export function EngineerGate({ children }: { children: React.ReactNode }) {
               <Shield className="h-8 w-8 text-primary" />
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-foreground">TSP/MSV Safety Analysis</h1>
+          <h1 className="text-2xl font-bold text-foreground">Tunnel Vehicle System — Safety Analysis</h1>
           <p className="text-sm text-muted-foreground">
             ISO 12100 / ISO 13849 Risk Assessment Platform
           </p>
