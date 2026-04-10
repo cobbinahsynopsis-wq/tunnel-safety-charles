@@ -1,5 +1,8 @@
-import type { SafetyFunction, FMEARow, FaultTreeNode } from "@/data/systems";
+import type { SafetyFunction, FMEARow, FaultTreeNode, CCFChecklistItem } from "@/data/systems";
+import { CCF_CHECKLIST_TEMPLATE } from "@/data/systems";
 import { EditableCell } from "./EditableCell";
+import { CCFChecklist } from "./CCFChecklist";
+import { HardwareMetrics } from "./HardwareMetrics";
 import { Plus, Trash2, Info, AlertTriangle, CheckCircle, AlertCircle, ShieldCheck } from "lucide-react";
 import {
   calculatePLr,
@@ -396,11 +399,37 @@ export function SafetyFunctionsTable({
           </tbody>
         </table>
       </div>
+
       {onAdd && (
         <button type="button" onClick={handleAdd} className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors px-2 py-1">
           <Plus className="h-3.5 w-3.5" /> Add safety function
         </button>
       )}
+
+      {/* Per-function Hardware Metrics & CCF */}
+      {functions.map(sf => {
+        const checklist = sf.ccfChecklist ?? CCF_CHECKLIST_TEMPLATE.map(t => ({ ...t, applied: false }));
+        const ccfScore = sf.ccfScore ?? 0;
+
+        return (
+          <div key={`metrics-${sf.id}`} className="space-y-2">
+            <div className="text-xs font-semibold text-muted-foreground px-1 pt-2 border-t border-border/30">
+              ▸ {sf.function}
+            </div>
+            <HardwareMetrics
+              sf={sf}
+              onUpdate={updates => onUpdate?.(sf.id, updates)}
+            />
+            <CCFChecklist
+              checklist={checklist}
+              totalScore={ccfScore}
+              onChange={(newChecklist, newScore) => {
+                onUpdate?.(sf.id, { ccfChecklist: newChecklist, ccfScore: newScore });
+              }}
+            />
+          </div>
+        );
+      })}
     </div>
   );
 }
