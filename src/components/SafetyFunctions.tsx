@@ -3,6 +3,7 @@ import { CCF_CHECKLIST_TEMPLATE } from "@/data/systems";
 import { EditableCell } from "./EditableCell";
 import { CCFChecklist } from "./CCFChecklist";
 import { HardwareMetrics } from "./HardwareMetrics";
+import { Plus, Trash2, Info, AlertTriangle, CheckCircle, AlertCircle, ShieldCheck } from "lucide-react";
 import {
   calculatePLr,
   validateWithFMEA,
