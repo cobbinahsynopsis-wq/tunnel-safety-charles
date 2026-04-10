@@ -7,10 +7,11 @@ import { FaultTree } from "@/components/FaultTree";
 import { SafetyFunctionsTable } from "@/components/SafetyFunctions";
 import { SILPLTable } from "@/components/SILPLTable";
 import { EditableCell } from "@/components/EditableCell";
-import { AlertTriangle, Shield, List, Plus, Trash2, FileDown, Printer } from "lucide-react";
+import { AlertTriangle, Shield, List, Plus, Trash2, FileDown, Printer, Code } from "lucide-react";
 import { useState } from "react";
 import { getDefaultHazardContext, calculatePLr, type HazardContext } from "@/utils/plrCalculation";
 import { exportSystemPDF } from "@/utils/pdfExport";
+import { downloadSistemaXML } from "@/utils/sistemaExport";
 
 function EditableList({
   items,
@@ -90,7 +91,7 @@ export default function SystemAnalysis() {
             <EditableCell value={system.description} onSave={v => updateSystem(systemId!, { description: v })} />
           </p>
         </div>
-        <div className="flex items-center gap-3 text-xs print-hide">
+        <div className="flex items-center gap-2 text-xs print-hide flex-wrap">
           <button
             type="button"
             onClick={() => window.print()}
@@ -106,6 +107,18 @@ export default function SystemAnalysis() {
           >
             <FileDown className="h-3.5 w-3.5" />
             Export PDF
+          </button>
+          <button
+            type="button"
+            onClick={() => downloadSistemaXML(
+              [system],
+              metadata,
+              (id) => systems.find(s => s.id === id)?.hazardContext ?? getDefaultHazardContext(id)
+            )}
+            className="flex items-center gap-1.5 px-3 py-1.5 border border-primary/50 text-primary rounded-sm text-xs font-medium hover:bg-primary/10 transition-colors"
+          >
+            <Code className="h-3.5 w-3.5" />
+            SISTEMA XML
           </button>
           {criticalCount > 0 && (
             <div className="flex items-center gap-1">
