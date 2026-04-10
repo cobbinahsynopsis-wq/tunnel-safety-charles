@@ -39,12 +39,48 @@ export interface RiskEntry {
   riskLevel: RiskLevel;
 }
 
+// ISO 13849-1 Clause 4.5.4 — Common Cause Failure checklist items
+export interface CCFChecklistItem {
+  id: string;
+  measure: string;
+  score: number; // points awarded if implemented
+  applied: boolean;
+}
+
+// ISO 13849-1 CCF checklist per Table F.1
+export const CCF_CHECKLIST_TEMPLATE: Omit<CCFChecklistItem, "applied">[] = [
+  // Separation / Segregation
+  { id: "ccf1", measure: "Physical separation between signal paths", score: 15 },
+  { id: "ccf2", measure: "Different technologies/designs used for redundant channels", score: 20 },
+  // Diversity
+  { id: "ccf3", measure: "Different electrical components (e.g., different manufacturers)", score: 10 },
+  { id: "ccf4", measure: "Use of well-tried components", score: 5 },
+  // Design / Application / Experience
+  { id: "ccf5", measure: "Protection against over-voltage, over-pressure, over-current", score: 15 },
+  { id: "ccf6", measure: "Components used within rated values", score: 5 },
+  // Assessment / Analysis
+  { id: "ccf7", measure: "FMEA analysis performed considering CCF", score: 5 },
+  // Competence / Training
+  { id: "ccf8", measure: "Designers trained in CCF avoidance", score: 5 },
+  // Environmental
+  { id: "ccf9", measure: "Prevention of contamination and EMC immunity verified", score: 25 },
+  { id: "ccf10", measure: "Environmental conditions specified and tested (temp, humidity, shock, vibration)", score: 10 },
+];
+
 export interface SafetyFunction {
   id: string;
   function: string;
   plr: string;
   category: string;
   description: string;
+  // Hardware metrics — ISO 13849-1 Clause 4.5
+  mttfd?: number; // Mean Time to Dangerous Failure (years)
+  mttfdLevel?: "low" | "medium" | "high"; // Low: 3-10y, Medium: 10-30y, High: 30-100y
+  dcavg?: number; // Average Diagnostic Coverage (%)
+  dcLevel?: "none" | "low" | "medium" | "high"; // None: <60%, Low: 60-90%, Medium: 90-99%, High: ≥99%
+  // CCF checklist
+  ccfChecklist?: CCFChecklistItem[];
+  ccfScore?: number; // Total score (≥65 required)
 }
 
 export interface SystemData {
