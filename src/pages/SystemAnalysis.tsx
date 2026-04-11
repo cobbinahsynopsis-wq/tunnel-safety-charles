@@ -79,22 +79,27 @@ export default function SystemAnalysis() {
   const criticalCount = system.risks.filter((r) => r.riskLevel === "critical").length;
   const highCount = system.risks.filter((r) => r.riskLevel === "high").length;
   const maxRpn = Math.max(...system.fmea.map((f) => f.rpn), 0);
+  const locked = isSystemLocked(systemId!);
 
   return (
     <div className="space-y-4">
+      {/* Sign-Off Panel */}
+      <SignOffPanel systemId={systemId!} signOff={system.signOff} />
+
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-lg font-semibold">
-              <EditableCell value={system.name} onSave={v => updateSystem(systemId!, { name: v })} />
+            <h1 className="text-lg font-semibold flex items-center gap-2">
+              {locked ? system.name : <EditableCell value={system.name} onSave={v => updateSystem(systemId!, { name: v })} />}
+              {locked && <Lock className="h-3.5 w-3.5 text-primary" />}
             </h1>
             <span className="text-xs font-mono text-muted-foreground px-1.5 py-0.5 bg-muted rounded-sm">
-              <EditableCell value={system.nameFr} onSave={v => updateSystem(systemId!, { nameFr: v })} />
+              {locked ? system.nameFr : <EditableCell value={system.nameFr} onSave={v => updateSystem(systemId!, { nameFr: v })} />}
             </span>
           </div>
           <p className="text-xs text-muted-foreground mt-1 max-w-2xl">
-            <EditableCell value={system.description} onSave={v => updateSystem(systemId!, { description: v })} />
+            {locked ? system.description : <EditableCell value={system.description} onSave={v => updateSystem(systemId!, { description: v })} />}
           </p>
         </div>
         <div className="flex items-center gap-2 text-xs print-hide flex-wrap">
