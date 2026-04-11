@@ -83,6 +83,13 @@ export interface SafetyFunction {
   ccfScore?: number; // Total score (≥65 required)
 }
 
+export interface SignOffRecord {
+  signedOff: boolean;
+  signedOffBy: string;
+  signedOffAt: string;
+  comments: string;
+}
+
 export interface SystemData {
   id: string;
   name: string;
@@ -97,6 +104,7 @@ export interface SystemData {
   consequences: string[];
   safetyMeasures: string[];
   hazardContext?: HazardContext;
+  signOff?: SignOffRecord;
 }
 
 function getRiskLevel(s: number, p: number): RiskLevel {
