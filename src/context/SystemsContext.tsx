@@ -20,7 +20,6 @@ interface SystemsContextType {
   signOffSystem: (systemId: string, engineer: string, comments: string) => void;
   unlockSystem: (systemId: string, engineer: string) => void;
   isSystemLocked: (systemId: string) => boolean;
-  deleteSystem: (systemId: string) => void;
   addFMEARow: (systemId: string, row: FMEARow) => void;
   updateFMEARow: (systemId: string, rowId: string, updates: Partial<FMEARow>) => void;
   deleteFMEARow: (systemId: string, rowId: string) => void;

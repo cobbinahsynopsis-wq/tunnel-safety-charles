@@ -37,7 +37,9 @@ export type AuditAction =
   | "CONSEQUENCE_UPDATE"
   | "CONSEQUENCE_DELETE"
   | "DATA_RESET"
-  | "DATA_IMPORT";
+  | "DATA_IMPORT"
+  | "SYSTEM_SIGNOFF"
+  | "SYSTEM_UNLOCK";
 
 const AUDIT_STORAGE_KEY = "tsp-safety-audit-trail";
 const MAX_ENTRIES = 500;
