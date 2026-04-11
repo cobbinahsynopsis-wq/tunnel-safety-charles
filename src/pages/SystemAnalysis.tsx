@@ -7,7 +7,8 @@ import { FaultTree } from "@/components/FaultTree";
 import { SafetyFunctionsTable } from "@/components/SafetyFunctions";
 import { SILPLTable } from "@/components/SILPLTable";
 import { EditableCell } from "@/components/EditableCell";
-import { AlertTriangle, Shield, List, Plus, Trash2, FileDown, Printer } from "lucide-react";
+import { SignOffPanel } from "@/components/SignOffPanel";
+import { AlertTriangle, Shield, List, Plus, Trash2, FileDown, Printer, Lock } from "lucide-react";
 import { useState } from "react";
 import { getDefaultHazardContext, calculatePLr, type HazardContext } from "@/utils/plrCalculation";
 import { exportSystemPDF } from "@/utils/pdfExport";
@@ -19,6 +20,7 @@ function EditableList({
   onDelete,
   accentClass,
   addLabel,
+  locked = false,
 }: {
   items: string[];
   onUpdate: (index: number, value: string) => void;
@@ -26,6 +28,7 @@ function EditableList({
   onDelete: (index: number) => void;
   accentClass: string;
   addLabel: string;
+  locked?: boolean;
 }) {
   return (
     <div className="space-y-1">
@@ -33,16 +36,20 @@ function EditableList({
         <div key={i} className="flex items-start gap-2 group text-xs text-muted-foreground">
           <span className={`${accentClass} mt-0.5`}>›</span>
           <div className="flex-1">
-            <EditableCell value={item} onSave={v => onUpdate(i, v)} />
+            {locked ? <span>{item}</span> : <EditableCell value={item} onSave={v => onUpdate(i, v)} />}
           </div>
-          <button onClick={() => onDelete(i)} className="opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive/80 transition-opacity shrink-0 mt-0.5" title="Delete">
-            <Trash2 className="h-3 w-3" />
-          </button>
+          {!locked && (
+            <button onClick={() => onDelete(i)} className="opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive/80 transition-opacity shrink-0 mt-0.5" title="Delete">
+              <Trash2 className="h-3 w-3" />
+            </button>
+          )}
         </div>
       ))}
-      <button onClick={() => onAdd("New item")} className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors mt-1">
-        <Plus className="h-3 w-3" /> {addLabel}
-      </button>
+      {!locked && (
+        <button onClick={() => onAdd("New item")} className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors mt-1">
+          <Plus className="h-3 w-3" /> {addLabel}
+        </button>
+      )}
     </div>
   );
 }
@@ -50,7 +57,7 @@ function EditableList({
 export default function SystemAnalysis() {
   const { systemId } = useParams<{ systemId: string }>();
   const {
-    systems, metadata, updateSystem,
+    systems, metadata, updateSystem, isSystemLocked,
     addFMEARow, updateFMEARow, deleteFMEARow,
     addRiskEntry, updateRiskEntry, deleteRiskEntry,
     addSafetyFunction, updateSafetyFunction, deleteSafetyFunction,
@@ -72,22 +79,27 @@ export default function SystemAnalysis() {
   const criticalCount = system.risks.filter((r) => r.riskLevel === "critical").length;
   const highCount = system.risks.filter((r) => r.riskLevel === "high").length;
   const maxRpn = Math.max(...system.fmea.map((f) => f.rpn), 0);
+  const locked = isSystemLocked(systemId!);
 
   return (
     <div className="space-y-4">
+      {/* Sign-Off Panel */}
+      <SignOffPanel systemId={systemId!} signOff={system.signOff} />
+
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-lg font-semibold">
-              <EditableCell value={system.name} onSave={v => updateSystem(systemId!, { name: v })} />
+            <h1 className="text-lg font-semibold flex items-center gap-2">
+              {locked ? system.name : <EditableCell value={system.name} onSave={v => updateSystem(systemId!, { name: v })} />}
+              {locked && <Lock className="h-3.5 w-3.5 text-primary" />}
             </h1>
             <span className="text-xs font-mono text-muted-foreground px-1.5 py-0.5 bg-muted rounded-sm">
-              <EditableCell value={system.nameFr} onSave={v => updateSystem(systemId!, { nameFr: v })} />
+              {locked ? system.nameFr : <EditableCell value={system.nameFr} onSave={v => updateSystem(systemId!, { nameFr: v })} />}
             </span>
           </div>
           <p className="text-xs text-muted-foreground mt-1 max-w-2xl">
-            <EditableCell value={system.description} onSave={v => updateSystem(systemId!, { description: v })} />
+            {locked ? system.description : <EditableCell value={system.description} onSave={v => updateSystem(systemId!, { description: v })} />}
           </p>
         </div>
         <div className="flex items-center gap-2 text-xs print-hide flex-wrap">
@@ -131,7 +143,7 @@ export default function SystemAnalysis() {
         <div className="flex-1">
           <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">Top Event</span>
           <p className="text-sm font-semibold">
-            <EditableCell value={system.topEvent} onSave={v => updateSystem(systemId!, { topEvent: v })} />
+            {locked ? system.topEvent : <EditableCell value={system.topEvent} onSave={v => updateSystem(systemId!, { topEvent: v })} />}
           </p>
         </div>
       </div>
@@ -148,27 +160,27 @@ export default function SystemAnalysis() {
         <TabsContent value="faulttree" className="mt-3">
           <FaultTree
             tree={system.faultTree}
-            onUpdateNode={(nodeId, updates) => updateFaultTreeNode(systemId!, nodeId, updates)}
-            onAddChild={(parentId, child) => addFaultTreeChild(systemId!, parentId, child)}
-            onDeleteNode={(nodeId) => deleteFaultTreeNode(systemId!, nodeId)}
+            onUpdateNode={locked ? undefined : (nodeId, updates) => updateFaultTreeNode(systemId!, nodeId, updates)}
+            onAddChild={locked ? undefined : (parentId, child) => addFaultTreeChild(systemId!, parentId, child)}
+            onDeleteNode={locked ? undefined : (nodeId) => deleteFaultTreeNode(systemId!, nodeId)}
           />
         </TabsContent>
 
         <TabsContent value="fmea" className="mt-3">
           <FMEATable
             rows={system.fmea}
-            onUpdate={(rowId, updates) => updateFMEARow(systemId!, rowId, updates)}
-            onAdd={(row) => addFMEARow(systemId!, row)}
-            onDelete={(rowId) => deleteFMEARow(systemId!, rowId)}
+            onUpdate={locked ? undefined : (rowId, updates) => updateFMEARow(systemId!, rowId, updates)}
+            onAdd={locked ? undefined : (row) => addFMEARow(systemId!, row)}
+            onDelete={locked ? undefined : (rowId) => deleteFMEARow(systemId!, rowId)}
           />
         </TabsContent>
 
         <TabsContent value="riskmatrix" className="mt-3">
           <RiskMatrix
             entries={system.risks}
-            onUpdate={(entryId, updates) => updateRiskEntry(systemId!, entryId, updates)}
-            onAdd={(entry) => addRiskEntry(systemId!, entry)}
-            onDelete={(entryId) => deleteRiskEntry(systemId!, entryId)}
+            onUpdate={locked ? undefined : (entryId, updates) => updateRiskEntry(systemId!, entryId, updates)}
+            onAdd={locked ? undefined : (entry) => addRiskEntry(systemId!, entry)}
+            onDelete={locked ? undefined : (entryId) => deleteRiskEntry(systemId!, entryId)}
           />
         </TabsContent>
 
@@ -178,10 +190,10 @@ export default function SystemAnalysis() {
             hazardContext={system.hazardContext ?? getDefaultHazardContext(systemId ?? "")}
             fmeaRows={system.fmea}
             faultTree={system.faultTree}
-            onUpdate={(sfId, updates) => updateSafetyFunction(systemId!, sfId, updates)}
-            onAdd={(sf) => addSafetyFunction(systemId!, sf)}
-            onDelete={(sfId) => deleteSafetyFunction(systemId!, sfId)}
-            onUpdateContext={(updates) => {
+            onUpdate={locked ? undefined : (sfId, updates) => updateSafetyFunction(systemId!, sfId, updates)}
+            onAdd={locked ? undefined : (sf) => addSafetyFunction(systemId!, sf)}
+            onDelete={locked ? undefined : (sfId) => deleteSafetyFunction(systemId!, sfId)}
+            onUpdateContext={locked ? undefined : (updates) => {
               const current = system.hazardContext ?? getDefaultHazardContext(systemId ?? "");
               updateSystem(systemId!, { hazardContext: { ...current, ...updates } });
             }}
@@ -203,6 +215,7 @@ export default function SystemAnalysis() {
                 onDelete={(i) => deleteSafetyMeasure(systemId!, i)}
                 accentClass="text-primary"
                 addLabel="Add measure"
+                locked={locked}
               />
             </div>
             <div className="border rounded-sm p-3">
@@ -217,6 +230,7 @@ export default function SystemAnalysis() {
                 onDelete={(i) => deleteConsequence(systemId!, i)}
                 accentClass="text-risk-high"
                 addLabel="Add consequence"
+                locked={locked}
               />
             </div>
           </div>

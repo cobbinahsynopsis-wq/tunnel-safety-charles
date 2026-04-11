@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
-import { systems as initialSystems, type SystemData, type FMEARow, type RiskEntry, type SafetyFunction, type FaultTreeNode, type RiskLevel } from "@/data/systems";
+import { systems as initialSystems, type SystemData, type FMEARow, type RiskEntry, type SafetyFunction, type FaultTreeNode, type RiskLevel, type SignOffRecord } from "@/data/systems";
 import { type AuditEntry, type AuditAction, loadAuditTrail, saveAuditTrail, createAuditEntry, clearAuditTrail } from "@/utils/auditTrail";
 
 export interface AnalysisMetadata {
@@ -17,6 +17,9 @@ interface SystemsContextType {
   updateSystem: (systemId: string, updates: Partial<SystemData>) => void;
   addSystem: (system: SystemData) => void;
   deleteSystem: (systemId: string) => void;
+  signOffSystem: (systemId: string, engineer: string, comments: string) => void;
+  unlockSystem: (systemId: string, engineer: string) => void;
+  isSystemLocked: (systemId: string) => boolean;
   addFMEARow: (systemId: string, row: FMEARow) => void;
   updateFMEARow: (systemId: string, rowId: string, updates: Partial<FMEARow>) => void;
   deleteFMEARow: (systemId: string, rowId: string) => void;
@@ -139,6 +142,26 @@ export function SystemsProvider({ children }: { children: React.ReactNode }) {
     setSystems(prev => prev.filter(s => s.id !== systemId));
     addAudit("SYSTEM_DELETE", systemId, name, `Deleted system "${name}"`);
   }, [addAudit, getSystemName]);
+
+  const signOffSystem = useCallback((systemId: string, engineer: string, comments: string) => {
+    const signOff: SignOffRecord = {
+      signedOff: true,
+      signedOffBy: engineer,
+      signedOffAt: new Date().toISOString(),
+      comments,
+    };
+    updateSystemData(systemId, s => ({ ...s, signOff }));
+    addAudit("SYSTEM_SIGNOFF", systemId, getSystemName(systemId), `Signed off by ${engineer}`);
+  }, [updateSystemData, addAudit, getSystemName]);
+
+  const unlockSystem = useCallback((systemId: string, engineer: string) => {
+    updateSystemData(systemId, s => ({ ...s, signOff: undefined }));
+    addAudit("SYSTEM_UNLOCK", systemId, getSystemName(systemId), `Unlocked by ${engineer}`);
+  }, [updateSystemData, addAudit, getSystemName]);
+
+  const isSystemLocked = useCallback((systemId: string) => {
+    return systems.find(s => s.id === systemId)?.signOff?.signedOff === true;
+  }, [systems]);
 
   const addFMEARow = useCallback((systemId: string, row: FMEARow) => {
     const stamped = { ...row, lastModifiedBy: metadata.engineerName, lastModifiedAt: new Date().toISOString() };
@@ -280,6 +303,7 @@ export function SystemsProvider({ children }: { children: React.ReactNode }) {
   return (
     <SystemsContext.Provider value={{
       systems, metadata, auditTrail, updateMetadata, updateSystem, addSystem, deleteSystem,
+      signOffSystem, unlockSystem, isSystemLocked,
       addFMEARow, updateFMEARow, deleteFMEARow,
       addRiskEntry, updateRiskEntry, deleteRiskEntry,
       addSafetyFunction, updateSafetyFunction, deleteSafetyFunction,
