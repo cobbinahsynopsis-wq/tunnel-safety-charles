@@ -20,6 +20,7 @@ function EditableList({
   onDelete,
   accentClass,
   addLabel,
+  locked = false,
 }: {
   items: string[];
   onUpdate: (index: number, value: string) => void;
@@ -27,6 +28,7 @@ function EditableList({
   onDelete: (index: number) => void;
   accentClass: string;
   addLabel: string;
+  locked?: boolean;
 }) {
   return (
     <div className="space-y-1">
@@ -34,16 +36,20 @@ function EditableList({
         <div key={i} className="flex items-start gap-2 group text-xs text-muted-foreground">
           <span className={`${accentClass} mt-0.5`}>›</span>
           <div className="flex-1">
-            <EditableCell value={item} onSave={v => onUpdate(i, v)} />
+            {locked ? <span>{item}</span> : <EditableCell value={item} onSave={v => onUpdate(i, v)} />}
           </div>
-          <button onClick={() => onDelete(i)} className="opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive/80 transition-opacity shrink-0 mt-0.5" title="Delete">
-            <Trash2 className="h-3 w-3" />
-          </button>
+          {!locked && (
+            <button onClick={() => onDelete(i)} className="opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive/80 transition-opacity shrink-0 mt-0.5" title="Delete">
+              <Trash2 className="h-3 w-3" />
+            </button>
+          )}
         </div>
       ))}
-      <button onClick={() => onAdd("New item")} className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors mt-1">
-        <Plus className="h-3 w-3" /> {addLabel}
-      </button>
+      {!locked && (
+        <button onClick={() => onAdd("New item")} className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors mt-1">
+          <Plus className="h-3 w-3" /> {addLabel}
+        </button>
+      )}
     </div>
   );
 }
