@@ -40,7 +40,7 @@ export function AppSidebar() {
               <Shield className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <h1 className="text-sm font-bold text-primary"><h1 className="text-sm font-bold text-primary">TVS</h1></h1>
+              <h1 className="text-sm font-bold text-primary">TVS</h1>
               <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-sidebar-foreground/50">
                 Safety Analysis
               </p>
