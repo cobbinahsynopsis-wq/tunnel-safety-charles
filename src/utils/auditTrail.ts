@@ -110,6 +110,8 @@ export function getActionLabel(action: AuditAction): string {
     CONSEQUENCE_DELETE: "Deleted consequence",
     DATA_RESET: "Reset all data",
     DATA_IMPORT: "Imported data",
+    SYSTEM_SIGNOFF: "System signed off",
+    SYSTEM_UNLOCK: "System unlocked",
   };
   return labels[action];
 }
