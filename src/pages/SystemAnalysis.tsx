@@ -57,7 +57,7 @@ function EditableList({
 export default function SystemAnalysis() {
   const { systemId } = useParams<{ systemId: string }>();
   const {
-    systems, metadata, updateSystem,
+    systems, metadata, updateSystem, isSystemLocked,
     addFMEARow, updateFMEARow, deleteFMEARow,
     addRiskEntry, updateRiskEntry, deleteRiskEntry,
     addSafetyFunction, updateSafetyFunction, deleteSafetyFunction,
