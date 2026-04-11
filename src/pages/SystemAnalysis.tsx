@@ -143,7 +143,7 @@ export default function SystemAnalysis() {
         <div className="flex-1">
           <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">Top Event</span>
           <p className="text-sm font-semibold">
-            <EditableCell value={system.topEvent} onSave={v => updateSystem(systemId!, { topEvent: v })} />
+            {locked ? system.topEvent : <EditableCell value={system.topEvent} onSave={v => updateSystem(systemId!, { topEvent: v })} />}
           </p>
         </div>
       </div>
@@ -160,27 +160,27 @@ export default function SystemAnalysis() {
         <TabsContent value="faulttree" className="mt-3">
           <FaultTree
             tree={system.faultTree}
-            onUpdateNode={(nodeId, updates) => updateFaultTreeNode(systemId!, nodeId, updates)}
-            onAddChild={(parentId, child) => addFaultTreeChild(systemId!, parentId, child)}
-            onDeleteNode={(nodeId) => deleteFaultTreeNode(systemId!, nodeId)}
+            onUpdateNode={locked ? undefined : (nodeId, updates) => updateFaultTreeNode(systemId!, nodeId, updates)}
+            onAddChild={locked ? undefined : (parentId, child) => addFaultTreeChild(systemId!, parentId, child)}
+            onDeleteNode={locked ? undefined : (nodeId) => deleteFaultTreeNode(systemId!, nodeId)}
           />
         </TabsContent>
 
         <TabsContent value="fmea" className="mt-3">
           <FMEATable
             rows={system.fmea}
-            onUpdate={(rowId, updates) => updateFMEARow(systemId!, rowId, updates)}
-            onAdd={(row) => addFMEARow(systemId!, row)}
-            onDelete={(rowId) => deleteFMEARow(systemId!, rowId)}
+            onUpdate={locked ? undefined : (rowId, updates) => updateFMEARow(systemId!, rowId, updates)}
+            onAdd={locked ? undefined : (row) => addFMEARow(systemId!, row)}
+            onDelete={locked ? undefined : (rowId) => deleteFMEARow(systemId!, rowId)}
           />
         </TabsContent>
 
         <TabsContent value="riskmatrix" className="mt-3">
           <RiskMatrix
             entries={system.risks}
-            onUpdate={(entryId, updates) => updateRiskEntry(systemId!, entryId, updates)}
-            onAdd={(entry) => addRiskEntry(systemId!, entry)}
-            onDelete={(entryId) => deleteRiskEntry(systemId!, entryId)}
+            onUpdate={locked ? undefined : (entryId, updates) => updateRiskEntry(systemId!, entryId, updates)}
+            onAdd={locked ? undefined : (entry) => addRiskEntry(systemId!, entry)}
+            onDelete={locked ? undefined : (entryId) => deleteRiskEntry(systemId!, entryId)}
           />
         </TabsContent>
 
@@ -190,10 +190,10 @@ export default function SystemAnalysis() {
             hazardContext={system.hazardContext ?? getDefaultHazardContext(systemId ?? "")}
             fmeaRows={system.fmea}
             faultTree={system.faultTree}
-            onUpdate={(sfId, updates) => updateSafetyFunction(systemId!, sfId, updates)}
-            onAdd={(sf) => addSafetyFunction(systemId!, sf)}
-            onDelete={(sfId) => deleteSafetyFunction(systemId!, sfId)}
-            onUpdateContext={(updates) => {
+            onUpdate={locked ? undefined : (sfId, updates) => updateSafetyFunction(systemId!, sfId, updates)}
+            onAdd={locked ? undefined : (sf) => addSafetyFunction(systemId!, sf)}
+            onDelete={locked ? undefined : (sfId) => deleteSafetyFunction(systemId!, sfId)}
+            onUpdateContext={locked ? undefined : (updates) => {
               const current = system.hazardContext ?? getDefaultHazardContext(systemId ?? "");
               updateSystem(systemId!, { hazardContext: { ...current, ...updates } });
             }}
@@ -215,6 +215,7 @@ export default function SystemAnalysis() {
                 onDelete={(i) => deleteSafetyMeasure(systemId!, i)}
                 accentClass="text-primary"
                 addLabel="Add measure"
+                locked={locked}
               />
             </div>
             <div className="border rounded-sm p-3">
@@ -229,6 +230,7 @@ export default function SystemAnalysis() {
                 onDelete={(i) => deleteConsequence(systemId!, i)}
                 accentClass="text-risk-high"
                 addLabel="Add consequence"
+                locked={locked}
               />
             </div>
           </div>
