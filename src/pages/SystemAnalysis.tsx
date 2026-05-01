@@ -8,6 +8,7 @@ import { SafetyFunctionsTable } from "@/components/SafetyFunctions";
 import { SILPLTable } from "@/components/SILPLTable";
 import { EditableCell } from "@/components/EditableCell";
 import { SignOffPanel } from "@/components/SignOffPanel";
+import { RevisionHistoryPanel } from "@/components/RevisionHistoryPanel";
 import { AlertTriangle, Shield, List, Plus, Trash2, FileDown, Printer, Lock } from "lucide-react";
 import { useState } from "react";
 import { getDefaultHazardContext, calculatePLr, type HazardContext } from "@/utils/plrCalculation";
@@ -85,6 +86,9 @@ export default function SystemAnalysis() {
     <div className="space-y-4">
       {/* Sign-Off Panel */}
       <SignOffPanel systemId={systemId!} signOff={system.signOff} />
+
+      {/* Revision history (auto-snapshots on sign-off) */}
+      <RevisionHistoryPanel systemId={systemId!} />
 
       {/* Header */}
       <div className="flex items-start justify-between">
