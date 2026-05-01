@@ -1,6 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { SystemData } from "@/data/systems";
 
+type Json = unknown;
+
 export interface AnalysisMetadataPayload {
   engineerName: string;
   date: string;
@@ -33,19 +35,17 @@ export async function fetchAllSystems(): Promise<SystemData[] | null> {
 
 /** Bulk-seed initial systems (only used the very first time the app runs against an empty DB). */
 export async function seedSystems(systems: SystemData[], engineer: string): Promise<void> {
-  const rows = systems.map(s => ({ id: s.id, data: s as unknown as Record<string, unknown>, updated_by: engineer }));
-  const { error } = await supabase.from("systems").upsert(rows, { onConflict: "id" });
+  const rows = systems.map(s => ({ id: s.id, data: s as unknown as Json, updated_by: engineer }));
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await supabase.from("systems").upsert(rows as any, { onConflict: "id" });
   if (error) console.error("[cloudSync] seedSystems error", error);
 }
 
 /** Push a single system (full record) to the database. */
 export async function upsertSystem(system: SystemData, engineer: string): Promise<void> {
-  const { error } = await supabase
-    .from("systems")
-    .upsert(
-      { id: system.id, data: system as unknown as Record<string, unknown>, updated_by: engineer, updated_at: new Date().toISOString() },
-      { onConflict: "id" }
-    );
+  const row = { id: system.id, data: system as unknown as Json, updated_by: engineer, updated_at: new Date().toISOString() };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await supabase.from("systems").upsert([row] as any, { onConflict: "id" });
   if (error) console.error("[cloudSync] upsertSystem error", error);
 }
 
@@ -66,9 +66,9 @@ export async function fetchMetadata(): Promise<AnalysisMetadataPayload | null> {
 }
 
 export async function upsertMetadata(meta: AnalysisMetadataPayload): Promise<void> {
-  const { error } = await supabase
-    .from("app_metadata")
-    .upsert({ id: "global", data: meta as unknown as Record<string, unknown>, updated_at: new Date().toISOString() }, { onConflict: "id" });
+  const row = { id: "global", data: meta as unknown as Json, updated_at: new Date().toISOString() };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await supabase.from("app_metadata").upsert([row] as any, { onConflict: "id" });
   if (error) console.error("[cloudSync] upsertMetadata error", error);
 }
 
@@ -110,19 +110,17 @@ export async function createRevision(
 ): Promise<RevisionRecord | null> {
   const next = await getNextRevisionNumber(system.id);
   const label = `REV.${String(next).padStart(2, "0")}`;
-  const { data, error } = await supabase
-    .from("system_revisions")
-    .insert({
-      system_id: system.id,
-      revision_number: next,
-      revision_label: label,
-      snapshot: system as unknown as Record<string, unknown>,
-      created_by: engineer || null,
-      comments: comments || null,
-      trigger,
-    })
-    .select()
-    .single();
+  const row = {
+    system_id: system.id,
+    revision_number: next,
+    revision_label: label,
+    snapshot: system as unknown as Json,
+    created_by: engineer || null,
+    comments: comments || null,
+    trigger,
+  };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await supabase.from("system_revisions").insert([row] as any).select().single();
   if (error) {
     console.error("[cloudSync] createRevision error", error);
     return null;
