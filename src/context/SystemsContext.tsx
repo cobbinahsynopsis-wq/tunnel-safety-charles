@@ -1,6 +1,16 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { systems as initialSystems, type SystemData, type FMEARow, type RiskEntry, type SafetyFunction, type FaultTreeNode, type RiskLevel, type SignOffRecord } from "@/data/systems";
 import { type AuditEntry, type AuditAction, loadAuditTrail, saveAuditTrail, createAuditEntry, clearAuditTrail } from "@/utils/auditTrail";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  fetchAllSystems,
+  fetchMetadata,
+  seedSystems,
+  upsertSystem,
+  deleteSystemRow,
+  upsertMetadata,
+  createRevision,
+} from "@/utils/cloudSync";
 
 export interface AnalysisMetadata {
   engineerName: string;
@@ -13,6 +23,7 @@ interface SystemsContextType {
   systems: SystemData[];
   metadata: AnalysisMetadata;
   auditTrail: AuditEntry[];
+  cloudReady: boolean;
   updateMetadata: (updates: Partial<AnalysisMetadata>) => void;
   updateSystem: (systemId: string, updates: Partial<SystemData>) => void;
   addSystem: (system: SystemData) => void;
@@ -92,6 +103,88 @@ export function SystemsProvider({ children }: { children: React.ReactNode }) {
   const [systems, setSystems] = useState<SystemData[]>(() => loadFromStorage() ?? structuredClone(initialSystems));
   const [metadata, setMetadata] = useState<AnalysisMetadata>(loadMetadata);
   const [auditTrail, setAuditTrail] = useState<AuditEntry[]>(loadAuditTrail);
+  const [cloudReady, setCloudReady] = useState(false);
+  // Refs to avoid echoing realtime updates back to the DB
+  const skipNextSyncRef = React.useRef<Set<string>>(new Set());
+  const pendingTimersRef = React.useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const systemsRef = React.useRef(systems);
+  const engineerRef = React.useRef(metadata.engineerName);
+  React.useEffect(() => { systemsRef.current = systems; }, [systems]);
+  React.useEffect(() => { engineerRef.current = metadata.engineerName; }, [metadata.engineerName]);
+
+  // Initial load from cloud + realtime subscription
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const cloud = await fetchAllSystems();
+      if (cancelled) return;
+      if (cloud && cloud.length > 0) {
+        setSystems(cloud);
+      } else {
+        // Empty DB — seed with whatever we currently have (initial defaults or local)
+        const seedFrom = loadFromStorage() ?? structuredClone(initialSystems);
+        await seedSystems(seedFrom, metadata.engineerName);
+        setSystems(seedFrom);
+      }
+      const meta = await fetchMetadata();
+      if (!cancelled && meta) {
+        setMetadata(prev => ({ ...prev, ...meta }));
+      }
+      if (!cancelled) setCloudReady(true);
+    })();
+
+    const channel = supabase
+      .channel("systems-sync")
+      .on("postgres_changes", { event: "*", schema: "public", table: "systems" }, payload => {
+        if (payload.eventType === "DELETE") {
+          const oldId = (payload.old as { id?: string })?.id;
+          if (!oldId) return;
+          setSystems(prev => prev.filter(s => s.id !== oldId));
+          return;
+        }
+        const row = payload.new as { id: string; data: SystemData };
+        if (!row?.id) return;
+        // Suppress echo of our own write
+        if (skipNextSyncRef.current.has(row.id)) {
+          skipNextSyncRef.current.delete(row.id);
+          return;
+        }
+        setSystems(prev => {
+          const idx = prev.findIndex(s => s.id === row.id);
+          if (idx === -1) return [...prev, row.data];
+          const copy = [...prev];
+          copy[idx] = row.data;
+          return copy;
+        });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "app_metadata" }, payload => {
+        const row = payload.new as { id: string; data: AnalysisMetadata };
+        if (row?.id !== "global") return;
+        setMetadata(prev => ({ ...prev, ...row.data, lastModified: row.data.lastModified ?? prev.lastModified }));
+      })
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Debounced push of a single system to the cloud
+  const schedulePush = useCallback((systemId: string) => {
+    const timers = pendingTimersRef.current;
+    const existing = timers.get(systemId);
+    if (existing) clearTimeout(existing);
+    const t = setTimeout(() => {
+      timers.delete(systemId);
+      const sys = systemsRef.current.find(s => s.id === systemId);
+      if (!sys) return;
+      skipNextSyncRef.current.add(systemId);
+      upsertSystem(sys, engineerRef.current);
+    }, 400);
+    timers.set(systemId, t);
+  }, []);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(systems));
@@ -119,13 +212,15 @@ export function SystemsProvider({ children }: { children: React.ReactNode }) {
     setMetadata(prev => {
       const updated = { ...prev, ...updates };
       localStorage.setItem(METADATA_KEY, JSON.stringify(updated));
+      upsertMetadata(updated);
       return updated;
     });
   }, []);
 
   const updateSystemData = useCallback((systemId: string, updater: (s: SystemData) => SystemData) => {
     setSystems(prev => prev.map(s => s.id === systemId ? updater(s) : s));
-  }, []);
+    schedulePush(systemId);
+  }, [schedulePush]);
 
   const updateSystem = useCallback((systemId: string, updates: Partial<SystemData>) => {
     updateSystemData(systemId, s => ({ ...s, ...updates }));
@@ -134,12 +229,15 @@ export function SystemsProvider({ children }: { children: React.ReactNode }) {
 
   const addSystem = useCallback((system: SystemData) => {
     setSystems(prev => [...prev, system]);
+    skipNextSyncRef.current.add(system.id);
+    upsertSystem(system, engineerRef.current);
     addAudit("SYSTEM_ADD", system.id, system.name, `Added system "${system.name}"`);
   }, [addAudit]);
 
   const deleteSystem = useCallback((systemId: string) => {
     const name = getSystemName(systemId);
     setSystems(prev => prev.filter(s => s.id !== systemId));
+    deleteSystemRow(systemId);
     addAudit("SYSTEM_DELETE", systemId, name, `Deleted system "${name}"`);
   }, [addAudit, getSystemName]);
 
@@ -150,9 +248,20 @@ export function SystemsProvider({ children }: { children: React.ReactNode }) {
       signedOffAt: new Date().toISOString(),
       comments,
     };
-    updateSystemData(systemId, s => ({ ...s, signOff }));
+    // Apply lock to local state + push immediately, then snapshot revision
+    setSystems(prev => {
+      const next = prev.map(s => s.id === systemId ? { ...s, signOff } : s);
+      const updated = next.find(s => s.id === systemId);
+      if (updated) {
+        skipNextSyncRef.current.add(systemId);
+        upsertSystem(updated, engineer).then(() => {
+          createRevision(updated, engineer, comments, "signoff");
+        });
+      }
+      return next;
+    });
     addAudit("SYSTEM_SIGNOFF", systemId, getSystemName(systemId), `Signed off by ${engineer}`);
-  }, [updateSystemData, addAudit, getSystemName]);
+  }, [addAudit, getSystemName]);
 
   const unlockSystem = useCallback((systemId: string, engineer: string) => {
     updateSystemData(systemId, s => ({ ...s, signOff: undefined }));
@@ -278,6 +387,8 @@ export function SystemsProvider({ children }: { children: React.ReactNode }) {
     setMetadata(newMeta);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(newSystems));
     localStorage.setItem(METADATA_KEY, JSON.stringify(newMeta));
+    seedSystems(newSystems, newMeta.engineerName);
+    upsertMetadata(newMeta);
     addAudit("DATA_IMPORT", "global", "All Systems", `Imported ${newSystems.length} systems`);
   }, [addAudit]);
 
@@ -290,6 +401,7 @@ export function SystemsProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(METADATA_KEY);
     setSystems(structuredClone(initialSystems));
+    seedSystems(structuredClone(initialSystems), metadata.engineerName);
     const freshMeta: AnalysisMetadata = {
       engineerName: metadata.engineerName,
       date: new Date().toISOString().split("T")[0],
@@ -297,12 +409,13 @@ export function SystemsProvider({ children }: { children: React.ReactNode }) {
       notes: "",
     };
     setMetadata(freshMeta);
+    upsertMetadata(freshMeta);
     addAudit("DATA_RESET", "global", "All Systems", "Reset all data to defaults");
   }, [addAudit, metadata.engineerName]);
 
   return (
     <SystemsContext.Provider value={{
-      systems, metadata, auditTrail, updateMetadata, updateSystem, addSystem, deleteSystem,
+      systems, metadata, auditTrail, cloudReady, updateMetadata, updateSystem, addSystem, deleteSystem,
       signOffSystem, unlockSystem, isSystemLocked,
       addFMEARow, updateFMEARow, deleteFMEARow,
       addRiskEntry, updateRiskEntry, deleteRiskEntry,
